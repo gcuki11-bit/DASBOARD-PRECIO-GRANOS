@@ -7,138 +7,239 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Unbounded:wght@700;900&family=IBM+Plex+Sans+Condensed:wght@300;400;600&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 :root{
-  --bg:#080b08;--surf:#0d110d;--card:#121612;--cardh:#171d17;
-  --b:#1c261c;--bb:#28382a;
-  --green:#4ade80;--gd:rgba(74,222,128,.14);--gm:#22c55e;
-  --red:#f87171;--rd:rgba(248,113,113,.14);
-  --amber:#fbbf24;--ad:rgba(251,191,36,.12);
+  --bg:#07090a;--surf:#0e1214;--card:#141a1e;--cardh:#1a2228;
+  --b:#1e2d35;--bb:#2a3f4a;
+  --green:#4ade80;--gd:rgba(74,222,128,.13);--gm:#22c55e;
+  --red:#f87171;--rd:rgba(248,113,113,.13);
+  --amber:#fbbf24;--ad:rgba(251,191,36,.11);
   --blue:#60a5fa;--bld:rgba(96,165,250,.1);
   --purple:#c084fc;--pd:rgba(192,132,252,.1);
-  --t:#e0f0e0;--tm:#8aaa8a;--td:#4a5e4a;
+  --t:#ffffff;--tm:#c0d4e0;--td:#5a7a8a;--tf:#2a3f4a;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--t);font-family:'IBM Plex Sans Condensed',sans-serif;min-height:100vh}
-body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.055) 3px,rgba(0,0,0,.055) 4px);pointer-events:none;z-index:999}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.04) 3px,rgba(0,0,0,.04) 4px);pointer-events:none;z-index:900}
 
-header{padding:22px 32px 0;border-bottom:1px solid var(--b);position:relative}
-header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gm) 45%,transparent)}
-.htop{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding-bottom:18px;flex-wrap:wrap}
-.eye{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.22em;color:var(--gm);text-transform:uppercase;margin-bottom:4px}
-.title{font-family:'Unbounded',sans-serif;font-size:26px;font-weight:900;letter-spacing:-.03em;color:var(--t);line-height:1}
-.title em{color:var(--green);font-style:normal}
-.sub{font-family:'DM Mono',monospace;font-size:9px;color:var(--td);letter-spacing:.13em;margin-top:3px}
-.hright{display:flex;flex-direction:column;align-items:flex-end;gap:3px}
-.clock{font-family:'DM Mono',monospace;font-size:24px;font-weight:500;letter-spacing:.03em;line-height:1}
-.datelbl{font-family:'DM Mono',monospace;font-size:9px;color:var(--td);letter-spacing:.1em}
-.sbar{display:flex;gap:16px;padding:9px 0 11px;flex-wrap:wrap}
-.pill{display:flex;align-items:center;gap:5px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;color:var(--td);text-transform:uppercase}
+/* ── HEADER ── */
+header{padding:24px 36px 0;border-bottom:1px solid var(--b);position:relative}
+header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gm) 40%,transparent)}
+.htop{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;padding-bottom:20px;flex-wrap:wrap}
+.brand-eye{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.24em;color:var(--gm);text-transform:uppercase;margin-bottom:5px}
+.brand-title{font-family:'Unbounded',sans-serif;font-size:28px;font-weight:900;letter-spacing:-.03em;color:#fff;line-height:1}
+.brand-title em{color:var(--green);font-style:normal}
+.brand-sub{font-family:'DM Mono',monospace;font-size:9px;color:var(--td);letter-spacing:.14em;margin-top:4px;text-transform:uppercase}
+.hright{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.clock{font-family:'DM Mono',monospace;font-size:26px;font-weight:500;letter-spacing:.03em;color:#fff;line-height:1}
+.datelbl{font-family:'DM Mono',monospace;font-size:9px;color:var(--td);letter-spacing:.12em}
+.sbar{display:flex;gap:18px;padding:10px 0 12px;flex-wrap:wrap}
+.pill{display:flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;color:var(--td);text-transform:uppercase}
 .dot{width:6px;height:6px;border-radius:50%;background:var(--td);flex-shrink:0}
 .dot.live{background:var(--green);animation:blink 2s infinite}
 .dot.loading{background:var(--amber);animation:blink .7s infinite}
 .dot.error{background:var(--red)}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
 
-.tabs{display:flex;margin:0 32px;border-bottom:1px solid var(--b)}
-.tab{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;padding:11px 18px;cursor:pointer;color:var(--td);border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .15s,border-color .15s;user-select:none}
+/* ── TABS ── */
+.tabs{display:flex;margin:0 36px;border-bottom:1px solid var(--b)}
+.tab{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;padding:12px 20px;cursor:pointer;color:var(--td);border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .15s,border-color .15s;user-select:none}
 .tab:hover:not(.active){color:var(--tm)}
 .tab.active.ars{color:var(--purple);border-color:var(--purple)}
 .tab.active.usd{color:var(--blue);border-color:var(--blue)}
 .tab.active.fut{color:var(--amber);border-color:var(--amber)}
 
-main{padding:22px 32px 32px}
+/* ── MAIN ── */
+main{padding:24px 36px 36px}
 .panel{display:none}
 .panel.active{display:block}
 
-.sh{display:flex;align-items:center;gap:10px;margin-bottom:13px}
-.sh-t{font-family:'Unbounded',sans-serif;font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;white-space:nowrap}
+/* ── SECTION HEADER ── */
+.sh{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.sh-t{font-family:'Unbounded',sans-serif;font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;white-space:nowrap}
 .sh-t.ars{color:var(--purple)}.sh-t.usd{color:var(--blue)}.sh-t.fut{color:var(--amber)}
 .sh-line{flex:1;height:1px;background:var(--b)}
 .sh-src{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;color:var(--td);white-space:nowrap}
 
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:2px}
+/* ── GRID ── */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:2px}
 
-.card{background:var(--card);border:1px solid var(--b);padding:16px 16px 13px;position:relative;overflow:hidden;transition:background .12s,border-color .12s}
+/* ── CARD ── */
+.card{background:var(--card);border:1px solid var(--b);padding:18px 18px 15px;position:relative;overflow:hidden;transition:background .12s,border-color .12s;cursor:pointer}
 .card:hover{background:var(--cardh);border-color:var(--bb)}
+.card:hover .chart-hint{opacity:1}
 .ca{position:absolute;top:0;left:0;width:3px;height:100%}
 .card.ars .ca{background:var(--purple)}
 .card.usd .ca{background:var(--blue)}
-.cico{font-size:15px;margin-bottom:5px}
-.cname{font-family:'Unbounded',sans-serif;font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--tm);text-transform:uppercase;margin-bottom:9px}
-.cprice{font-family:'DM Mono',monospace;font-size:21px;font-weight:500;color:var(--t);letter-spacing:-.02em;line-height:1;display:flex;align-items:baseline;gap:5px;min-height:25px}
-.cprice .cur{font-size:9px;color:var(--td);letter-spacing:.1em}
+.cico{font-size:17px;margin-bottom:7px;line-height:1}
+.cname{font-family:'Unbounded',sans-serif;font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--tm);text-transform:uppercase;margin-bottom:10px}
+.cprice{font-family:'DM Mono',monospace;font-size:23px;font-weight:500;color:#fff;letter-spacing:-.02em;line-height:1;display:flex;align-items:baseline;gap:6px;min-height:27px}
+.cprice .cur{font-size:10px;color:var(--td);letter-spacing:.1em}
 .cprice.loading{font-size:12px;color:var(--td);align-items:center}
-.cprice.nodata{font-size:13px;color:var(--td);align-items:center}
-.cusd{font-family:'DM Mono',monospace;font-size:11px;color:var(--td);margin-top:4px}
+.cprice.nodata{font-size:14px;color:var(--td);align-items:center}
+.cusd{font-family:'DM Mono',monospace;font-size:11px;color:var(--td);margin-top:5px}
+.chart-hint{position:absolute;top:10px;right:10px;font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.1em;color:var(--td);opacity:0;transition:opacity .2s;pointer-events:none}
 
-.vstrip{display:flex;gap:4px;margin-top:9px;flex-wrap:wrap}
-.vchip{display:flex;flex-direction:column;align-items:center;padding:3px 6px;border-radius:2px;min-width:50px}
-.vchip .vl{font-family:'DM Mono',monospace;font-size:7px;letter-spacing:.12em;color:var(--td);text-transform:uppercase;line-height:1;margin-bottom:2px}
+/* ── VAR CHIPS ── */
+.vstrip{display:flex;gap:4px;margin-top:10px;flex-wrap:wrap}
+.vchip{display:flex;flex-direction:column;align-items:center;padding:4px 7px;border-radius:2px;min-width:52px}
+.vchip .vl{font-family:'DM Mono',monospace;font-size:7px;letter-spacing:.13em;color:var(--td);text-transform:uppercase;line-height:1;margin-bottom:2px}
 .vchip .vv{font-family:'DM Mono',monospace;font-size:11px;font-weight:500;line-height:1}
 .vchip.pos{background:var(--gd)}.vchip.pos .vv{color:var(--green)}
 .vchip.neg{background:var(--rd)}.vchip.neg .vv{color:var(--red)}
 .vchip.neu{background:rgba(255,255,255,.04)}.vchip.neu .vv{color:var(--td)}
 
+/* ── FLASH ── */
 .card.fu::after{content:'';position:absolute;inset:0;background:var(--gd);animation:fls .5s ease-out forwards;pointer-events:none}
 .card.fd::after{content:'';position:absolute;inset:0;background:var(--rd);animation:fls .5s ease-out forwards;pointer-events:none}
 @keyframes fls{from{opacity:1}to{opacity:0}}
 
-/* TABLA FUTUROS */
-.ftable{background:var(--surf);border:1px solid var(--b);overflow-x:auto;margin-bottom:22px}
-.fgrid{min-width:560px}
-.fhdr,.frow{display:grid;grid-template-columns:130px 80px 120px 80px 80px 80px;padding:9px 16px;gap:4px;align-items:center}
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px)}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surf);border:1px solid var(--bb);width:100%;max-width:860px;max-height:92vh;overflow-y:auto;position:relative}
+.modal-header{padding:22px 28px 18px;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between;gap:16px;position:sticky;top:0;background:var(--surf);z-index:2}
+.modal-ico{font-size:22px}
+.modal-name{font-family:'Unbounded',sans-serif;font-size:18px;font-weight:900;letter-spacing:-.02em;color:#fff}
+.modal-sub{font-family:'DM Mono',monospace;font-size:9px;color:var(--td);letter-spacing:.12em;margin-top:3px;text-transform:uppercase}
+.modal-close{background:none;border:1px solid var(--b);color:var(--tm);font-family:'DM Mono',monospace;font-size:10px;padding:7px 12px;cursor:pointer;transition:all .15s;flex-shrink:0;letter-spacing:.1em}
+.modal-close:hover{border-color:var(--red);color:var(--red)}
+.modal-body{padding:22px 28px 28px}
+.period-bar{display:flex;gap:4px;margin-bottom:22px}
+.pbtn{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;padding:7px 14px;border:1px solid var(--b);background:none;color:var(--td);cursor:pointer;transition:all .15s}
+.pbtn:hover{color:#fff;border-color:var(--bb)}
+.pbtn.active{background:var(--gd);border-color:var(--green);color:var(--green)}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:2px;margin-bottom:20px}
+.stat-box{background:var(--card);border:1px solid var(--b);padding:13px 16px}
+.stat-lbl{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.15em;color:var(--td);text-transform:uppercase;margin-bottom:5px}
+.stat-val{font-family:'DM Mono',monospace;font-size:16px;font-weight:500;color:#fff;line-height:1}
+.stat-val.pos{color:var(--green)}.stat-val.neg{color:var(--red)}
+.chart-wrap{background:var(--card);border:1px solid var(--b);padding:18px;height:290px;position:relative}
+.chart-empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+.chart-empty-ico{font-size:36px;opacity:.25}
+.chart-empty-txt{font-family:'DM Mono',monospace;font-size:10px;color:var(--td);letter-spacing:.1em;text-align:center;line-height:1.7}
+.hist-table{margin-top:16px;background:var(--card);border:1px solid var(--b);overflow:hidden}
+.hist-hdr,.hist-row{display:grid;grid-template-columns:1fr 1fr 1fr 84px;padding:9px 16px;gap:4px;align-items:center}
+.hist-hdr{background:var(--surf);border-bottom:1px solid var(--b)}
+.hc{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.13em;color:var(--td);text-transform:uppercase}
+.hc.r{text-align:right}
+.hist-row{border-bottom:1px solid var(--b);transition:background .1s}
+.hist-row:last-child{border-bottom:none}
+.hist-row:hover{background:var(--cardh)}
+.hval{font-family:'DM Mono',monospace;font-size:12px;color:#fff}
+.hval.r{text-align:right}
+.hbadge{font-family:'DM Mono',monospace;font-size:10px;text-align:right;padding:2px 6px;border-radius:2px}
+.hbadge.pos{color:var(--green);background:var(--gd)}
+.hbadge.neg{color:var(--red);background:var(--rd)}
+.hbadge.neu{color:var(--td)}
+
+/* ── FUTUROS TABLE ── */
+.ftable{background:var(--surf);border:1px solid var(--b);overflow-x:auto;margin-bottom:8px}
+.fgrid{min-width:620px}
+.fhdr,.frow{display:grid;grid-template-columns:140px 90px 110px 90px 90px 90px 90px;padding:10px 18px;gap:4px;align-items:center}
 .fhdr{background:var(--card);border-bottom:1px solid var(--b)}
 .fc{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.13em;color:var(--td);text-transform:uppercase}
 .fc.r{text-align:right}
 .frow{border-bottom:1px solid var(--b);transition:background .1s}
 .frow:last-child{border-bottom:none}
 .frow:hover{background:var(--card)}
-.fname{font-family:'IBM Plex Sans Condensed',sans-serif;font-size:13px;font-weight:600;color:var(--t);display:flex;align-items:center;gap:6px}
-.fpos{font-family:'DM Mono',monospace;font-size:11px;color:var(--td)}
-.fpr{font-family:'DM Mono',monospace;font-size:13px;color:var(--t);text-align:right}
-.fbadge{font-family:'DM Mono',monospace;font-size:10px;text-align:right;padding:2px 5px;border-radius:2px}
+.fname{font-family:'IBM Plex Sans Condensed',sans-serif;font-size:13px;font-weight:600;color:#fff;display:flex;align-items:center;gap:7px}
+.fpos{font-family:'DM Mono',monospace;font-size:11px;color:var(--tm)}
+.fpr{font-family:'DM Mono',monospace;font-size:14px;color:#fff;text-align:right}
+.fvar{font-family:'DM Mono',monospace;font-size:11px;text-align:right}
+.fvar.pos{color:var(--green)}.fvar.neg{color:var(--red)}.fvar.neu{color:var(--td)}
+.fbadge{font-family:'DM Mono',monospace;font-size:10px;text-align:right;padding:2px 6px;border-radius:2px}
 .fbadge.pos{color:var(--green);background:var(--gd)}
 .fbadge.neg{color:var(--red);background:var(--rd)}
 .fbadge.neu{color:var(--td);background:rgba(255,255,255,.04)}
+.fdate{font-family:'DM Mono',monospace;font-size:10px;color:var(--td);text-align:right}
+.fut-loading{padding:30px;text-align:center;font-family:'DM Mono',monospace;font-size:10px;color:var(--td);letter-spacing:.1em}
+.fut-src-note{font-family:'DM Mono',monospace;font-size:8px;color:var(--td);letter-spacing:.09em;margin-top:8px;text-align:right}
 
-/* ROFEX */
-.rgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:2px;margin-top:13px}
-.rcard{background:var(--card);border:1px solid var(--b);padding:12px 13px 9px;position:relative;overflow:hidden}
-.rcard .rca{position:absolute;top:0;left:0;width:3px;height:100%;background:var(--amber)}
-.rpos{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.12em;color:var(--amber);margin-bottom:4px}
-.rprice{font-family:'DM Mono',monospace;font-size:17px;font-weight:500;color:var(--t);line-height:1}
-.rsub{font-family:'DM Mono',monospace;font-size:8px;color:var(--td);margin-top:2px}
+/* ── ROFEX GRID ── */
+.rgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(115px,1fr));gap:2px;margin-top:14px}
+.rcard{background:var(--card);border:1px solid var(--b);padding:13px 14px 10px;position:relative;overflow:hidden}
+.rca{position:absolute;top:0;left:0;width:3px;height:100%;background:var(--amber)}
+.rpos{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.13em;color:var(--amber);margin-bottom:5px;text-transform:uppercase}
+.rprice{font-family:'DM Mono',monospace;font-size:18px;font-weight:500;color:#fff;line-height:1}
+.rsub{font-family:'DM Mono',monospace;font-size:8px;color:var(--td);margin-top:3px}
 
-/* NOTICE */
-.notice{font-family:'DM Mono',monospace;font-size:9px;color:var(--td);letter-spacing:.08em;line-height:1.6;background:var(--surf);border:1px solid var(--b);border-left:3px solid var(--amber);padding:10px 14px;margin-bottom:14px}
-.notice strong{color:var(--amber)}
-
-footer{padding:12px 32px 22px;border-top:1px solid var(--b);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
-.fnote{font-family:'DM Mono',monospace;font-size:8px;color:var(--td);letter-spacing:.09em;line-height:1.6;max-width:620px}
-.fright{display:flex;align-items:center;gap:10px}
+/* ── FOOTER ── */
+footer{padding:14px 36px 24px;border-top:1px solid var(--b);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+.fnote{font-family:'DM Mono',monospace;font-size:8px;color:var(--td);letter-spacing:.09em;line-height:1.7;max-width:640px}
+.fright{display:flex;align-items:center;gap:12px}
 .lupd{font-family:'DM Mono',monospace;font-size:8px;color:var(--td);letter-spacing:.09em}
-.btnr{background:none;border:1px solid var(--bb);color:var(--tm);font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.13em;padding:7px 13px;cursor:pointer;text-transform:uppercase;transition:all .15s}
+.btnr{background:none;border:1px solid var(--bb);color:var(--tm);font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;padding:8px 14px;cursor:pointer;text-transform:uppercase;transition:all .15s}
 .btnr:hover{background:var(--gd);border-color:var(--green);color:var(--green)}
 .btnr:disabled{opacity:.4;cursor:default}
 
-@media(max-width:680px){
-  header,main,footer{padding-left:14px;padding-right:14px}
-  .tabs{margin:0 14px}
-  .title{font-size:20px}
+@media(max-width:700px){
+  header,main,footer{padding-left:16px;padding-right:16px}
+  .tabs{margin:0 16px}
+  .brand-title{font-size:22px}
   .grid{grid-template-columns:1fr 1fr}
-  .rgrid{grid-template-columns:repeat(auto-fill,minmax(90px,1fr))}
+  .fgrid{min-width:100%}
+  .fhdr,.frow{grid-template-columns:100px 70px 1fr 70px 70px;gap:2px}
+  .fhdr>*:nth-child(6),.frow>*:nth-child(6),
+  .fhdr>*:nth-child(7),.frow>*:nth-child(7){display:none}
+  .rgrid{grid-template-columns:repeat(auto-fill,minmax(95px,1fr))}
+  .modal-body{padding:16px}
+  .stats-row{grid-template-columns:1fr 1fr}
+  .hist-hdr,.hist-row{grid-template-columns:1fr 1fr 84px}
+  .hist-hdr>*:nth-child(3),.hist-row>*:nth-child(3){display:none}
 }
 </style>
 </head>
 <body>
 
+<!-- ═══ MODAL HISTÓRICO ═══ -->
+<div class="modal-overlay" id="modal" onclick="closeModalClick(event)">
+  <div class="modal" id="modal-box">
+    <div class="modal-header">
+      <div style="display:flex;align-items:center;gap:12px">
+        <span class="modal-ico" id="m-icon">🌱</span>
+        <div>
+          <div class="modal-name" id="m-name">—</div>
+          <div class="modal-sub" id="m-sub">—</div>
+        </div>
+      </div>
+      <button class="modal-close" onclick="document.getElementById('modal').classList.remove('open')">✕ CERRAR</button>
+    </div>
+    <div class="modal-body">
+      <div class="period-bar">
+        <button class="pbtn" data-d="7"   onclick="setPeriod(7)">7D</button>
+        <button class="pbtn active" data-d="30"  onclick="setPeriod(30)">30D</button>
+        <button class="pbtn" data-d="90"  onclick="setPeriod(90)">90D</button>
+        <button class="pbtn" data-d="999" onclick="setPeriod(999)">TODO</button>
+      </div>
+      <div class="stats-row" id="m-stats"></div>
+      <div class="chart-wrap">
+        <canvas id="m-chart"></canvas>
+        <div class="chart-empty" id="m-empty" style="display:none">
+          <div class="chart-empty-ico">📊</div>
+          <div class="chart-empty-txt">Sin datos históricos suficientes aún.<br>El dashboard acumula snapshots con cada apertura.<br>Volvé en unas horas para ver la evolución.</div>
+        </div>
+      </div>
+      <div class="hist-table">
+        <div class="hist-hdr">
+          <div class="hc">Fecha y hora</div>
+          <div class="hc r">ARS/tn</div>
+          <div class="hc r">USD/tn</div>
+          <div class="hc r">Var.</div>
+        </div>
+        <div id="m-rows"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <header>
   <div class="htop">
     <div>
-      <div class="eye">Mercado de Granos · Argentina</div>
-      <div class="title">PIZARRA <em>GRANOS</em></div>
-      <div class="sub">GRASSI CORREDORES · BCR ROSARIO · MATBA-ROFEX</div>
+      <div class="brand-eye">Mercado de Granos · Argentina</div>
+      <div class="brand-title">PIZARRA <em>GRANOS</em></div>
+      <div class="brand-sub">Grassi Corredores · BCR Rosario · Matba-Rofex</div>
     </div>
     <div class="hright">
       <div class="clock" id="clock">--:--:--</div>
@@ -147,8 +248,9 @@ footer{padding:12px 32px 22px;border-top:1px solid var(--b);display:flex;justify
   </div>
   <div class="sbar">
     <div class="pill"><div class="dot loading" id="dg"></div><span id="lg">Conectando Grassi…</span></div>
+    <div class="pill"><div class="dot loading" id="dm"></div><span id="lm">Cargando Matba-Rofex…</span></div>
     <div class="pill"><div class="dot loading" id="df"></div><span id="lf">Cargando dólar…</span></div>
-    <div class="pill"><div class="dot neu" id="dh"></div><span id="lh">Historial: acumulando…</span></div>
+    <div class="pill"><div class="dot loading" id="dh"></div><span id="lh">Historial…</span></div>
   </div>
 </header>
 
@@ -159,43 +261,47 @@ footer{padding:12px 32px 22px;border-top:1px solid var(--b);display:flex;justify
 </div>
 
 <main>
-  <!-- PANEL ARS -->
+  <!-- ARS -->
   <div class="panel active" id="panel-ars">
-    <div class="notice"><strong>▌ Variaciones 24hs / 7d / 1m:</strong> Se construyen automáticamente guardando snapshots. Desde el primer día tenés 24hs, a la semana 7d, al mes el 1m. Los datos se guardan localmente en este navegador.</div>
-    <div class="sh"><div class="sh-t ars">Pizarra Rosario · ARS/tn</div><div class="sh-line"></div><div class="sh-src">GRASSI · ggsa.com.ar/get_pizarra/</div></div>
+    <div class="sh"><div class="sh-t ars">Pizarra Rosario · ARS/tn</div><div class="sh-line"></div><div class="sh-src">GRASSI · ggsa.com.ar</div></div>
     <div class="grid" id="grid-ars"></div>
   </div>
 
-  <!-- PANEL USD -->
+  <!-- USD -->
   <div class="panel" id="panel-usd">
-    <div class="sh"><div class="sh-t usd">Precios en USD · USD/tn</div><div class="sh-line"></div><div class="sh-src">GRASSI ARS ÷ DÓLAR ROFEX</div></div>
+    <div class="sh"><div class="sh-t usd">Precios en USD · USD/tn</div><div class="sh-line"></div><div class="sh-src">ARS ÷ DÓLAR SPOT</div></div>
     <div class="grid" id="grid-usd"></div>
   </div>
 
-  <!-- PANEL FUTUROS -->
+  <!-- FUTUROS -->
   <div class="panel" id="panel-fut">
-    <div class="sh"><div class="sh-t fut">Futuros MATBA-ROFEX · USD/tn</div><div class="sh-line"></div><div class="sh-src">GRASSI · ggsa.com.ar/get_futuros/</div></div>
+    <div class="sh"><div class="sh-t fut">Cierre Agropecuario · Futuros USD/tn</div><div class="sh-line"></div><div class="sh-src">MATBA-ROFEX</div></div>
     <div class="ftable">
       <div class="fgrid">
         <div class="fhdr">
           <div class="fc">Cultivo</div>
           <div class="fc">Posición</div>
-          <div class="fc r">Precio USD/tn</div>
-          <div class="fc r">24hs</div>
-          <div class="fc r">7 días</div>
-          <div class="fc r">1 mes</div>
+          <div class="fc r">Ajuste USD</div>
+          <div class="fc r">Var. día</div>
+          <div class="fc r">Vol.</div>
+          <div class="fc r">Int. Abierto</div>
+          <div class="fc r">Vto.</div>
         </div>
-        <div id="fbody"></div>
+        <div id="fbody"><div class="fut-loading">Consultando Matba-Rofex…</div></div>
       </div>
     </div>
-    <div class="sh"><div class="sh-t fut">Dólar Futuro ROFEX</div><div class="sh-line"></div><div class="sh-src">MATBA-ROFEX vía GRASSI · ARS/USD</div></div>
-    <div class="rgrid" id="rgrid"></div>
+    <div class="fut-src-note" id="fut-src-note"></div>
+
+    <div style="margin-top:24px">
+      <div class="sh"><div class="sh-t fut">Dólar Futuro ROFEX</div><div class="sh-line"></div><div class="sh-src">MATBA-ROFEX · ARS/USD</div></div>
+      <div class="rgrid" id="rgrid"></div>
+    </div>
   </div>
 </main>
 
 <footer>
   <div class="fnote">
-    Precios ARS: API Grassi Corredores (ggsa.com.ar/get_pizarra/) · USD: ARS ÷ Dólar ROFEX (ggsa.com.ar/get_futuros/) · FX de referencia: AwesomeAPI · Futuros: MATBA-ROFEX vía Grassi · Variaciones via localStorage · Auto-refresh 3min
+    ARS: API Grassi Corredores (ggsa.com.ar) · USD: ARS ÷ Dólar AwesomeAPI · Futuros: Cierre Agropecuario Matba-Rofex · Historial en localStorage · Auto-refresh 3min
   </div>
   <div class="fright">
     <div class="lupd" id="lupd">—</div>
@@ -204,9 +310,9 @@ footer{padding:12px 32px 22px;border-top:1px solid var(--b);display:flex;justify
 </footer>
 
 <script>
-// ═══════════════════════════
-// CONFIG CULTIVOS
-// ═══════════════════════════
+// ═══════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════
 const CROPS = [
   {k:'soja',            n:'Soja',    i:'🌱'},
   {k:'maiz',            n:'Maíz',    i:'🌽'},
@@ -215,341 +321,400 @@ const CROPS = [
   {k:'sorgo',           n:'Sorgo',   i:'🌿'},
   {k:'cebadaforrajera', n:'Cebada',  i:'🟤'},
 ];
-const FUT_CROPS = [
-  {k:'soja', n:'Soja', i:'🌱'},
-  {k:'maiz', n:'Maíz', i:'🌽'},
-  {k:'trigo',n:'Trigo',i:'🌾'},
+
+// Símbolos Matba-Rofex para scraping por cultivo
+const MATBA_CROPS = [
+  {k:'SOJA',    n:'Soja',    i:'🌱'},
+  {k:'MAIZ',    n:'Maíz',    i:'🌽'},
+  {k:'TRIGO',   n:'Trigo',   i:'🌾'},
+  {k:'GIRASOL', n:'Girasol', i:'🌻'},
+  {k:'SORGO',   n:'Sorgo',   i:'🌿'},
+  {k:'CEBADA',  n:'Cebada',  i:'🟤'},
 ];
-const LS_KEY = 'gd_snaps_v6';
 
-// ═══════════════════════════
-// ESTADO GLOBAL
-// ═══════════════════════════
+const LS_KEY = 'gd_snaps_v7';
+
+// ═══════════════════════════════════════
+// ESTADO
+// ═══════════════════════════════════════
 let prevArs = {};
-let dolarSpot = null;  // Tipo de cambio actual
+let dolarSpot = null;
+let activeChartKey = null;
+let activeChartMode = 'ars';
+let activePeriod = 30;
+let chartInst = null;
 
-// ═══════════════════════════
+// ═══════════════════════════════════════
 // HELPERS
-// ═══════════════════════════
+// ═══════════════════════════════════════
 const fmtARS = v => v == null ? '—' : Math.round(v).toLocaleString('es-AR');
 const fmtUSD = v => v == null ? '—' : v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
-const calcVar = (now, then) => (!now || !then || then === 0) ? null : ((now - then) / then) * 100;
-const vCls = p => p == null || isNaN(p) ? 'neu' : p > 0 ? 'pos' : p < 0 ? 'neg' : 'neu';
-const vTxt = p => p == null || isNaN(p) ? '—' : (p >= 0 ? '+' : '') + p.toFixed(2) + '%';
-
-function formatPos(ym) {
-  const m = ['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-  if (!ym || ym.length < 6) return ym || '—';
-  return `${m[+ym.slice(4,6)]}-${ym.slice(2,4)}`;
+const calcVar = (now,then) => (!now||!then||then===0) ? null : ((now-then)/then)*100;
+const vCls = p => p==null||isNaN(p) ? 'neu' : p>0?'pos':p<0?'neg':'neu';
+const vTxt = p => p==null||isNaN(p) ? '—' : (p>=0?'+':'')+p.toFixed(2)+'%';
+function fmtDT(ts){
+  return new Date(ts).toLocaleString('es-AR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',timeZone:'America/Argentina/Buenos_Aires',hour12:false});
 }
 
-// ═══════════════════════════
-// LOCALSTORAGE — SNAPSHOTS
-// ═══════════════════════════
-function loadSnaps() {
-  try { return JSON.parse(localStorage.getItem(LS_KEY) || '[]'); } catch(e) { return []; }
+// ═══════════════════════════════════════
+// LOCALSTORAGE
+// ═══════════════════════════════════════
+function loadSnaps(){ try{return JSON.parse(localStorage.getItem(LS_KEY)||'[]');}catch(e){return[];} }
+function saveSnap(prices){
+  let s=loadSnaps();
+  s.push({ts:Date.now(),prices});
+  s=s.filter(x=>x.ts>Date.now()-95*24*3600000);
+  try{localStorage.setItem(LS_KEY,JSON.stringify(s));}catch(e){}
+  updateHistLabel(s);
 }
-function saveSnap(prices) {
-  let snaps = loadSnaps();
-  snaps.push({ ts: Date.now(), prices });
-  // Mantener solo últimos 35 días
-  const cutoff = Date.now() - 35 * 24 * 3600 * 1000;
-  snaps = snaps.filter(s => s.ts > cutoff);
-  try { localStorage.setItem(LS_KEY, JSON.stringify(snaps)); } catch(e) {}
-
-  // Actualizar estado de historial
-  const oldest = snaps[0];
-  const ageH = oldest ? (Date.now() - oldest.ts) / 3600000 : 0;
-  let msg = '';
-  if (ageH < 1) msg = 'Historial: acumulando…';
-  else if (ageH < 24) msg = `Historial: ${Math.round(ageH)}h de datos`;
-  else if (ageH < 168) msg = `Historial: ${Math.round(ageH/24)}d de datos`;
-  else msg = `Historial: +7d ✓`;
-  document.getElementById('lh').textContent = msg;
-  document.getElementById('dh').className = 'dot ' + (ageH > 24 ? 'live' : 'loading');
+function updateHistLabel(s){
+  if(!s)s=loadSnaps();
+  const ageH=s.length?(Date.now()-s[0].ts)/3600000:0;
+  const msg=ageH<1?'Historial: acumulando':ageH<24?`Hist: ${Math.round(ageH)}h`:`Hist: ${Math.round(ageH/24)}d ✓`;
+  document.getElementById('lh').textContent=msg;
+  document.getElementById('dh').className='dot '+(ageH>24?'live':'loading');
 }
-
-function getPriceAtHoursAgo(key, hoursAgo) {
-  const snaps = loadSnaps();
-  const target = Date.now() - hoursAgo * 3600000;
-  // Snaps anteriores al target (con margen de 3h)
-  const candidates = snaps.filter(s => s.ts <= target + 3 * 3600000);
-  if (!candidates.length) return null;
-  // El más cercano al target
-  const best = candidates.reduce((a, b) =>
-    Math.abs(a.ts - target) < Math.abs(b.ts - target) ? a : b
-  );
-  return best.prices?.[key] ?? null;
+function getPriceAgo(key,h){
+  const snaps=loadSnaps(),target=Date.now()-h*3600000;
+  const cands=snaps.filter(s=>s.ts<=target+3*3600000);
+  if(!cands.length)return null;
+  const best=cands.reduce((a,b)=>Math.abs(a.ts-target)<Math.abs(b.ts-target)?a:b);
+  return best.prices?.[key]??null;
+}
+function getHistory(key,days){
+  const snaps=loadSnaps(),cutoff=days>=999?0:Date.now()-days*24*3600000;
+  const f=snaps.filter(s=>s.ts>=cutoff);
+  const byHour={};
+  f.forEach(s=>{
+    const d=new Date(s.ts);
+    byHour[`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}-${d.getHours()}`]=s;
+  });
+  return Object.values(byHour).sort((a,b)=>a.ts-b.ts)
+    .map(s=>({ts:s.ts,val:s.prices?.[key]??null})).filter(p=>p.val!=null);
 }
 
-// ═══════════════════════════
-// STATUS & CLOCK
-// ═══════════════════════════
-function setSt(did, lid, cls, txt) {
-  document.getElementById(did).className = 'dot ' + cls;
-  document.getElementById(lid).textContent = txt;
+// ═══════════════════════════════════════
+// CLOCK & STATUS
+// ═══════════════════════════════════════
+function tick(){
+  const tz={timeZone:'America/Argentina/Buenos_Aires'};
+  const n=new Date();
+  document.getElementById('clock').textContent=n.toLocaleTimeString('es-AR',{...tz,hour12:false});
+  document.getElementById('date').textContent=n.toLocaleDateString('es-AR',{...tz,weekday:'long',day:'2-digit',month:'long',year:'numeric'}).toUpperCase();
 }
-function tick() {
-  const tz = { timeZone: 'America/Argentina/Buenos_Aires' };
-  const n = new Date();
-  document.getElementById('clock').textContent = n.toLocaleTimeString('es-AR',{...tz,hour12:false});
-  document.getElementById('date').textContent = n.toLocaleDateString('es-AR',{...tz,weekday:'long',day:'2-digit',month:'long',year:'numeric'}).toUpperCase();
-}
-setInterval(tick, 1000); tick();
+setInterval(tick,1000);tick();
+function setSt(d,l,c,t){document.getElementById(d).className='dot '+c;document.getElementById(l).textContent=t;}
 
-// ═══════════════════════════
+// ═══════════════════════════════════════
 // TABS
-// ═══════════════════════════
-function showTab(id, el) {
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('panel-' + id).classList.add('active');
+// ═══════════════════════════════════════
+function showTab(id,el){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
   el.classList.add('active');
 }
 
-// ═══════════════════════════
-// INIT GRIDS
-// ═══════════════════════════
-function chips() {
-  return ['24hs','7d','1m'].map(l =>
-    `<div class="vchip neu" data-p="${l}"><span class="vl">${l}</span><span class="vv">—</span></div>`
-  ).join('');
+// ═══════════════════════════════════════
+// MODAL
+// ═══════════════════════════════════════
+function openModal(k,mode){
+  const c=CROPS.find(x=>x.k===k);if(!c)return;
+  activeChartKey=k;activeChartMode=mode||'ars';
+  document.getElementById('modal').classList.add('open');
+  document.getElementById('m-icon').textContent=c.i;
+  document.getElementById('m-name').textContent=c.n;
+  document.getElementById('m-sub').textContent=mode==='usd'?'EVOLUCIÓN HISTÓRICA · USD/tn':'EVOLUCIÓN HISTÓRICA · ARS/tn';
+  renderModal();
+}
+function closeModalClick(e){if(e.target===document.getElementById('modal'))document.getElementById('modal').classList.remove('open');}
+function setPeriod(d){
+  activePeriod=d;
+  document.querySelectorAll('.pbtn').forEach(b=>b.classList.toggle('active',+b.dataset.d===d));
+  renderModal();
+}
+function renderModal(){
+  if(!activeChartKey)return;
+  const raw=getHistory(activeChartKey,activePeriod);
+  const series=raw.map(p=>({ts:p.ts,val:activeChartMode==='usd'&&dolarSpot?p.val/dolarSpot:p.val}));
+  renderStats(series);renderChart(series);renderTable(raw,series);
+}
+function renderStats(s){
+  const el=document.getElementById('m-stats');
+  if(!s.length){el.innerHTML='';return;}
+  const vals=s.map(p=>p.val);
+  const cur=vals[vals.length-1],first=vals[0];
+  const min=Math.min(...vals),max=Math.max(...vals);
+  const vT=calcVar(cur,first);
+  const cur24=getPriceAgo(activeChartKey,24);
+  const v24=cur24?calcVar(activeChartMode==='usd'&&dolarSpot?cur:vals[vals.length-1],activeChartMode==='usd'&&dolarSpot?cur24/dolarSpot:cur24):null;
+  const fmt=activeChartMode==='usd'?fmtUSD:fmtARS;
+  el.innerHTML=[
+    {l:'Precio actual',v:fmt(cur),c:''},
+    {l:'Var. período',v:vTxt(vT),c:vCls(vT)},
+    {l:'Var. 24hs',v:vTxt(v24),c:vCls(v24)},
+    {l:'Mínimo',v:fmt(min),c:''},
+    {l:'Máximo',v:fmt(max),c:''},
+    {l:'Puntos',v:`${s.length}`,c:''},
+  ].map(x=>`<div class="stat-box"><div class="stat-lbl">${x.l}</div><div class="stat-val ${x.c}" style="font-size:14px">${x.v}</div></div>`).join('');
+}
+function renderChart(s){
+  const cv=document.getElementById('m-chart'),em=document.getElementById('m-empty');
+  if(s.length<2){cv.style.display='none';em.style.display='flex';if(chartInst){chartInst.destroy();chartInst=null;}return;}
+  cv.style.display='block';em.style.display='none';
+  const labels=s.map(p=>fmtDT(p.ts)),data=s.map(p=>p.val);
+  const up=data[data.length-1]>=data[0];
+  const lc=up?'#4ade80':'#f87171',fc=up?'rgba(74,222,128,.07)':'rgba(248,113,113,.07)';
+  if(chartInst)chartInst.destroy();
+  chartInst=new Chart(cv,{type:'line',data:{labels,datasets:[{data,borderColor:lc,borderWidth:1.5,pointRadius:s.length>60?0:2,pointHoverRadius:4,pointBackgroundColor:lc,fill:true,backgroundColor:ctx=>{const g=ctx.chart.ctx.createLinearGradient(0,0,0,ctx.chart.height);g.addColorStop(0,fc);g.addColorStop(1,'transparent');return g;},tension:.3}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{backgroundColor:'#141a1e',borderColor:'#2a3f4a',borderWidth:1,titleColor:'#5a7a8a',bodyColor:'#fff',titleFont:{family:'DM Mono',size:10},bodyFont:{family:'DM Mono',size:12},callbacks:{label:ctx=>{const v=ctx.parsed.y;return activeChartMode==='usd'?`  USD ${fmtUSD(v)}/tn`:`  ARS ${fmtARS(v)}/tn`;}}}},scales:{x:{ticks:{color:'#5a7a8a',font:{family:'DM Mono',size:8},maxTicksLimit:8,maxRotation:0},grid:{color:'rgba(255,255,255,.03)'},border:{color:'#1e2d35'}},y:{ticks:{color:'#5a7a8a',font:{family:'DM Mono',size:9},callback:v=>activeChartMode==='usd'?`USD ${fmtUSD(v)}`:`${Math.round(v/1000)}k`},grid:{color:'rgba(255,255,255,.04)'},border:{color:'#1e2d35'}}}}});
+}
+function renderTable(raw,series){
+  const rows=document.getElementById('m-rows');
+  if(!raw.length){rows.innerHTML='<div style="padding:22px;text-align:center;font-family:DM Mono,monospace;font-size:10px;color:var(--td)">Sin datos aún</div>';return;}
+  const combined=raw.map((p,i)=>({...p,usd:series[i]?.val})).reverse().slice(0,50);
+  rows.innerHTML=combined.map((p,i)=>{
+    const prev=combined[i+1];
+    const vd=prev?calcVar(p.val,prev.val):null;
+    return `<div class="hist-row"><div class="hval">${fmtDT(p.ts)}</div><div class="hval r">${fmtARS(p.val)}</div><div class="hval r">${p.usd?fmtUSD(p.usd):'—'}</div><div class="hbadge ${vCls(vd)}">${vTxt(vd)}</div></div>`;
+  }).join('');
 }
 
-function initGrids() {
-  // ARS grid
-  document.getElementById('grid-ars').innerHTML = CROPS.map(c => `
-    <div class="card ars" id="ca-${c.k}">
-      <div class="ca"></div>
-      <div class="cico">${c.i}</div>
-      <div class="cname">${c.n}</div>
+// ═══════════════════════════════════════
+// INIT GRIDS
+// ═══════════════════════════════════════
+function chips(){return['24hs','7d','1m'].map(l=>`<div class="vchip neu" data-p="${l}"><span class="vl">${l}</span><span class="vv">—</span></div>`).join('');}
+function initGrids(){
+  document.getElementById('grid-ars').innerHTML=CROPS.map(c=>`
+    <div class="card ars" id="ca-${c.k}" onclick="openModal('${c.k}','ars')">
+      <div class="ca"></div><div class="chart-hint">📊 HISTORIAL</div>
+      <div class="cico">${c.i}</div><div class="cname">${c.n}</div>
       <div class="cprice loading" id="pa-${c.k}">Cargando…</div>
       <div class="vstrip" id="va-${c.k}">${chips()}</div>
     </div>`).join('');
-
-  // USD grid
-  document.getElementById('grid-usd').innerHTML = CROPS.map(c => `
-    <div class="card usd" id="cu-${c.k}">
-      <div class="ca"></div>
-      <div class="cico">${c.i}</div>
-      <div class="cname">${c.n}</div>
+  document.getElementById('grid-usd').innerHTML=CROPS.map(c=>`
+    <div class="card usd" id="cu-${c.k}" onclick="openModal('${c.k}','usd')">
+      <div class="ca"></div><div class="chart-hint">📊 HISTORIAL</div>
+      <div class="cico">${c.i}</div><div class="cname">${c.n}</div>
       <div class="cprice loading" id="pu-${c.k}">Cargando…</div>
       <div class="cusd" id="fu-${c.k}"></div>
       <div class="vstrip" id="vu-${c.k}">${chips()}</div>
     </div>`).join('');
-
-  // Futuros
-  document.getElementById('fbody').innerHTML = FUT_CROPS.map(c => `
-    <div class="frow">
-      <div class="fname"><span>${c.i}</span>${c.n}</div>
-      <div class="fpos" id="fp-${c.k}">—</div>
-      <div class="fpr" id="fpr-${c.k}">—</div>
-      <div class="fbadge neu" id="f24-${c.k}">—</div>
-      <div class="fbadge neu" id="f7d-${c.k}">—</div>
-      <div class="fbadge neu" id="f1m-${c.k}">—</div>
-    </div>`).join('');
+  updateHistLabel();
 }
+function setChip(sid,p,pct){const s=document.getElementById(sid);if(!s)return;const c=s.querySelector(`[data-p="${p}"]`);if(!c)return;c.className='vchip '+vCls(pct);c.querySelector('.vv').textContent=vTxt(pct);}
+function setBadge(id,pct){const el=document.getElementById(id);if(!el)return;el.className='fbadge '+vCls(pct);el.textContent=vTxt(pct);}
 
-function setChip(sid, period, pct) {
-  const s = document.getElementById(sid);
-  if (!s) return;
-  const c = s.querySelector(`[data-p="${period}"]`);
-  if (!c) return;
-  c.className = 'vchip ' + vCls(pct);
-  c.querySelector('.vv').textContent = vTxt(pct);
-}
-
-function setBadge(id, pct) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.className = 'fbadge ' + vCls(pct);
-  el.textContent = vTxt(pct);
-}
-
-// ═══════════════════════════
-// FETCH DÓLAR (AwesomeAPI)
-// ═══════════════════════════
-async function fetchDolar() {
+// ═══════════════════════════════════════
+// FETCH DÓLAR
+// ═══════════════════════════════════════
+async function fetchDolar(){
   setSt('df','lf','loading','Actualizando dólar…');
-  try {
-    const r = await fetch('https://economia.awesomeapi.com.br/json/last/USD-ARS');
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    const d = await r.json();
-    const precio = parseFloat(d['USDARS']?.bid);
-    if (!precio) throw new Error('Sin dato');
-    dolarSpot = precio;
-    setSt('df','lf','live', `USD/ARS ${Math.round(precio).toLocaleString('es-AR')}`);
-  } catch(e) {
-    // Fallback: intentar con dólar ROFEX spot del endpoint de Grassi
-    setSt('df','lf','error', 'Dólar: usando ROFEX');
-  }
+  try{
+    const r=await fetch('https://economia.awesomeapi.com.br/json/last/USD-ARS');
+    const d=await r.json();
+    const p=parseFloat(d['USDARS']?.bid);
+    if(!p)throw new Error();
+    dolarSpot=p;
+    setSt('df','lf','live',`USD/ARS ${Math.round(p).toLocaleString('es-AR')}`);
+  }catch(e){setSt('df','lf','error','FX no disponible');}
 }
 
-// ═══════════════════════════
-// FETCH GRASSI PIZARRA + FUTUROS
-// ═══════════════════════════
-async function fetchGrassi() {
+// ═══════════════════════════════════════
+// FETCH GRASSI
+// ═══════════════════════════════════════
+async function fetchGrassi(){
   setSt('dg','lg','loading','Actualizando Grassi…');
-  try {
-    // Fetch paralelo
-    const [rPiz, rFut] = await Promise.all([
-      fetch('https://www.ggsa.com.ar/get_pizarra/'),
-      fetch('https://www.ggsa.com.ar/get_futuros/'),
-    ]);
-    if (!rPiz.ok) throw new Error('Pizarra HTTP ' + rPiz.status);
-    const [dPiz, dFut] = await Promise.all([rPiz.json(), rFut.json()]);
+  try{
+    const [rP,rF]=await Promise.all([fetch('https://www.ggsa.com.ar/get_pizarra/'),fetch('https://www.ggsa.com.ar/get_futuros/')]);
+    if(!rP.ok)throw new Error('HTTP '+rP.status);
+    const [dP,dF]=await Promise.all([rP.json(),rF.json()]);
+    const piz=dP.pizarra?.[0];
+    if(!piz)throw new Error('Sin datos');
 
-    const piz = dPiz.pizarra?.[0];
-    const fut = dFut.futuros?.[0];
-    if (!piz) throw new Error('Sin datos pizarra');
-
-    // --- Extraer dólar ROFEX spot (posición más cercana) como fallback ---
-    const rofexVals = (fut?.rofex?.dolar?.valores || []).filter(v => v.precio && parseFloat(v.precio) > 0);
-    if (!dolarSpot && rofexVals.length) {
-      dolarSpot = parseFloat(rofexVals[0].precio);
-      setSt('df','lf','live', `USD/ARS ${Math.round(dolarSpot).toLocaleString('es-AR')} (ROFEX)`);
+    // Fallback dólar desde ROFEX
+    const rofexVals=(dF?.futuros?.[0]?.rofex?.dolar?.valores||[]).filter(v=>v.precio&&parseFloat(v.precio)>0);
+    if(!dolarSpot&&rofexVals.length){
+      dolarSpot=parseFloat(rofexVals[0].precio);
+      setSt('df','lf','live',`USD/ARS ${Math.round(dolarSpot).toLocaleString('es-AR')} (ROFEX)`);
     }
 
-    // --- PIZARRA ARS ---
-    const snap = {};
-    CROPS.forEach(c => {
-      const raw = parseFloat(piz[c.k]?.rosario || 0);
-      const val = raw > 0 ? raw : null;
-      const pe = document.getElementById('pa-' + c.k);
-      const card = document.getElementById('ca-' + c.k);
-
-      if (!val) {
-        if (pe) { pe.className = 'cprice nodata'; pe.textContent = 'S/D'; }
-        // USD también S/D
-        const pu = document.getElementById('pu-' + c.k);
-        if (pu) { pu.className = 'cprice nodata'; pu.textContent = 'S/D'; }
+    const snap={};
+    CROPS.forEach(c=>{
+      const raw=parseFloat(piz[c.k]?.rosario||0);
+      const val=raw>0?raw:null;
+      const pe=document.getElementById('pa-'+c.k);
+      const card=document.getElementById('ca-'+c.k);
+      if(!val){
+        if(pe){pe.className='cprice nodata';pe.textContent='S/D';}
+        const pu=document.getElementById('pu-'+c.k);
+        if(pu){pu.className='cprice nodata';pu.textContent='S/D';}
         return;
       }
-
-      snap[c.k] = val;
-
-      // Flash ARS
-      const prev = prevArs[c.k];
-      if (prev !== undefined && val !== prev) {
-        card.classList.remove('fu','fd');
-        void card.offsetWidth;
-        card.classList.add(val > prev ? 'fu' : 'fd');
-      }
-      prevArs[c.k] = val;
-
-      // Precio ARS
-      if (pe) {
-        pe.className = 'cprice';
-        pe.innerHTML = `${fmtARS(val)} <span class="cur">ARS/tn</span>`;
-      }
-
-      // Variaciones ARS desde localStorage
-      const p24 = getPriceAtHoursAgo(c.k, 24);
-      const p7d  = getPriceAtHoursAgo(c.k, 168);
-      const p1m  = getPriceAtHoursAgo(c.k, 720);
-      setChip('va-' + c.k, '24hs', calcVar(val, p24));
-      setChip('va-' + c.k, '7d',   calcVar(val, p7d));
-      setChip('va-' + c.k, '1m',   calcVar(val, p1m));
-
-      // --- PANEL USD: ARS ÷ dólar ---
-      if (dolarSpot) {
-        const valUSD = val / dolarSpot;
-        const pu = document.getElementById('pu-' + c.k);
-        const fu = document.getElementById('fu-' + c.k);
-        const cardU = document.getElementById('cu-' + c.k);
-
-        // Flash USD
-        if (pu && pu._prev !== undefined && Math.abs(valUSD - pu._prev) > 0.01) {
-          cardU.classList.remove('fu','fd');
-          void cardU.offsetWidth;
-          cardU.classList.add(valUSD > pu._prev ? 'fu' : 'fd');
-        }
-        if (pu) {
-          pu._prev = valUSD;
-          pu.className = 'cprice';
-          pu.innerHTML = `${fmtUSD(valUSD)} <span class="cur">USD/tn</span>`;
-        }
-        if (fu) fu.textContent = `= ${fmtARS(val)} ARS`;
-
-        // Variaciones USD (mismas proporciones que ARS si dólar estable)
-        const u24 = p24 && dolarSpot ? calcVar(valUSD, p24 / dolarSpot) : null;
-        const u7d  = p7d && dolarSpot ? calcVar(valUSD, p7d / dolarSpot) : null;
-        const u1m  = p1m && dolarSpot ? calcVar(valUSD, p1m / dolarSpot) : null;
-        setChip('vu-' + c.k, '24hs', u24);
-        setChip('vu-' + c.k, '7d',   u7d);
-        setChip('vu-' + c.k, '1m',   u1m);
+      snap[c.k]=val;
+      const prev=prevArs[c.k];
+      if(prev!==undefined&&val!==prev){card.classList.remove('fu','fd');void card.offsetWidth;card.classList.add(val>prev?'fu':'fd');}
+      prevArs[c.k]=val;
+      if(pe){pe.className='cprice';pe.innerHTML=`${fmtARS(val)} <span class="cur">ARS/tn</span>`;}
+      const p24=getPriceAgo(c.k,24),p7d=getPriceAgo(c.k,168),p1m=getPriceAgo(c.k,720);
+      setChip('va-'+c.k,'24hs',calcVar(val,p24));
+      setChip('va-'+c.k,'7d',calcVar(val,p7d));
+      setChip('va-'+c.k,'1m',calcVar(val,p1m));
+      if(dolarSpot){
+        const valUSD=val/dolarSpot;
+        const pu=document.getElementById('pu-'+c.k);
+        const fu=document.getElementById('fu-'+c.k);
+        const cU=document.getElementById('cu-'+c.k);
+        if(pu&&pu._prev!==undefined&&Math.abs(valUSD-pu._prev)>0.01){cU.classList.remove('fu','fd');void cU.offsetWidth;cU.classList.add(valUSD>pu._prev?'fu':'fd');}
+        if(pu){pu._prev=valUSD;pu.className='cprice';pu.innerHTML=`${fmtUSD(valUSD)} <span class="cur">USD/tn</span>`;}
+        if(fu)fu.textContent=`= ${fmtARS(val)} ARS`;
+        setChip('vu-'+c.k,'24hs',p24&&dolarSpot?calcVar(valUSD,p24/dolarSpot):null);
+        setChip('vu-'+c.k,'7d',p7d&&dolarSpot?calcVar(valUSD,p7d/dolarSpot):null);
+        setChip('vu-'+c.k,'1m',p1m&&dolarSpot?calcVar(valUSD,p1m/dolarSpot):null);
       }
     });
+    if(Object.keys(snap).length)saveSnap(snap);
 
-    // Guardar snapshot
-    if (Object.keys(snap).length > 0) saveSnap(snap);
+    // Dólar ROFEX grid
+    document.getElementById('rgrid').innerHTML=rofexVals.slice(0,12).map(v=>{
+      const pos=v.pos?.length===6?formatPos(v.pos):v.pos;
+      return `<div class="rcard"><div class="rca"></div><div class="rpos">${pos}</div><div class="rprice">${parseFloat(v.precio).toLocaleString('es-AR',{maximumFractionDigits:1})}</div><div class="rsub">ARS/USD</div></div>`;
+    }).join('');
 
-    // --- FUTUROS MATBA ---
-    if (fut) {
-      const matba = fut.matba || {};
-      FUT_CROPS.forEach(c => {
-        const vals = (matba[c.k]?.valores || []).filter(v => v.precio && parseFloat(v.precio) > 0);
-        if (!vals.length) return;
-        const top = vals[0];
-        const price = parseFloat(top.precio);
-        const posLabel = top.pos?.length === 6 ? formatPos(top.pos) : (top.pos || '—');
-        const ultimo = top.ultimo ? parseFloat(top.ultimo) : null;
-
-        document.getElementById('fp-' + c.k).textContent = posLabel;
-        document.getElementById('fpr-' + c.k).textContent = `USD ${fmtUSD(price)}/tn`;
-
-        // 24h: precio vs último registrado
-        setBadge('f24-' + c.k, calcVar(price, ultimo));
-        // 7d y 1m: comparar posición próxima vs posiciones más lejanas como proxy de curva
-        const v7 = vals.length > 1 ? calcVar(price, parseFloat(vals[Math.min(1, vals.length-1)].precio || 0)) : null;
-        const v1m = vals.length > 2 ? calcVar(price, parseFloat(vals[vals.length - 1].precio || 0)) : null;
-        setBadge('f7d-' + c.k, v7);
-        setBadge('f1m-' + c.k, v1m);
-      });
-
-      // Dólar ROFEX tabla
-      document.getElementById('rgrid').innerHTML = rofexVals.slice(0, 12).map(v => `
-        <div class="rcard">
-          <div class="rca"></div>
-          <div class="rpos">${v.pos?.length === 6 ? formatPos(v.pos) : v.pos}</div>
-          <div class="rprice">${parseFloat(v.precio).toLocaleString('es-AR',{maximumFractionDigits:1})}</div>
-          <div class="rsub">ARS/USD</div>
-        </div>`).join('');
-    }
-
-    setSt('dg','lg','live', `Grassi · ${piz.fecha || 'Hoy'}`);
-  } catch(e) {
-    setSt('dg','lg','error', 'Error: ' + e.message);
-    CROPS.forEach(c => {
-      ['pa-','pu-'].forEach(pre => {
-        const el = document.getElementById(pre + c.k);
-        if (el) { el.className = 'cprice nodata'; el.textContent = 'Error'; }
-      });
-    });
+    setSt('dg','lg','live',`Grassi · ${piz.fecha||'Hoy'}`);
+  }catch(e){
+    setSt('dg','lg','error','Error: '+e.message);
+    CROPS.forEach(c=>{['pa-','pu-'].forEach(pre=>{const el=document.getElementById(pre+c.k);if(el){el.className='cprice nodata';el.textContent='Error';}});});
   }
 }
 
-// ═══════════════════════════
-// FETCH ALL
-// ═══════════════════════════
-async function fetchAll() {
-  const btn = document.getElementById('btnr');
-  btn.disabled = true; btn.textContent = 'Cargando…';
+function formatPos(ym){const m=['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];return`${m[+ym.slice(4,6)]}-${ym.slice(2,4)}`;}
 
-  await fetchDolar();
-  await fetchGrassi();
+// ═══════════════════════════════════════
+// FETCH MATBA-ROFEX (Claude API scraping)
+// Lee la página de cierre agropecuario e interpreta los datos
+// ═══════════════════════════════════════
+async function fetchMatba(){
+  setSt('dm','lm','loading','Leyendo Matba-Rofex…');
+  try{
+    const hoy=new Date().toLocaleDateString('es-AR',{timeZone:'America/Argentina/Buenos_Aires'});
+    const prompt=`Necesito los datos del CIERRE AGROPECUARIO de hoy (${hoy}) de Matba-Rofex Argentina.
+Buscá en https://matbarofex.com.ar/ la sección "Cierre Agropecuario" o "Precios de Ajuste Agropecuarios" y extraé los futuros de Soja, Maíz, Trigo, Girasol, Sorgo y Cebada.
+Para cada posición dame: cultivo, posición/vencimiento, precio de ajuste en USD/tn, variación del día, volumen operado, interés abierto.
 
-  const now = new Date().toLocaleTimeString('es-AR',{timeZone:'America/Argentina/Buenos_Aires',hour12:false});
-  document.getElementById('lupd').textContent = 'Actualizado: ' + now;
-  btn.disabled = false; btn.textContent = '↺ Actualizar';
+Respondé ÚNICAMENTE con JSON válido sin markdown. Formato exacto:
+{
+  "fecha": "DD/MM/YYYY",
+  "futuros": [
+    {
+      "cultivo": "Soja",
+      "simbolo": "SOJ",
+      "posicion": "May-26",
+      "vencimiento": "Mayo 2026",
+      "ajuste_usd": 290.0,
+      "variacion": -1.5,
+      "variacion_pct": -0.51,
+      "volumen": 1200,
+      "interes_abierto": 45000
+    }
+  ]
+}
+Incluí todas las posiciones disponibles por cultivo. Usá 0 si no hay dato. Los precios deben ser reales del cierre de hoy o del último cierre disponible.`;
+
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:2000,
+        tools:[{type:'web_search_20250305',name:'web_search'}],
+        messages:[{role:'user',content:prompt}]
+      })
+    });
+    if(!res.ok)throw new Error('API '+res.status);
+    const data=await res.json();
+
+    // Extraer texto de la respuesta (puede haber tool_use blocks intermedios)
+    const textBlock=data.content?.find(b=>b.type==='text');
+    if(!textBlock?.text)throw new Error('Sin respuesta');
+
+    let jsonStr=textBlock.text.trim().replace(/```json\n?/g,'').replace(/```\n?/g,'').trim();
+    const match=jsonStr.match(/\{[\s\S]*\}/);
+    if(!match)throw new Error('JSON no encontrado');
+
+    const parsed=JSON.parse(match[0]);
+    renderFuturos(parsed);
+    setSt('dm','lm','live',`Matba · ${parsed.fecha||hoy}`);
+  }catch(e){
+    setSt('dm','lm','error','Error Matba: '+e.message);
+    document.getElementById('fbody').innerHTML=`<div class="fut-loading" style="color:var(--red)">No se pudo cargar: ${e.message}</div>`;
+  }
 }
 
-// ═══════════════════════════
+function renderFuturos(data){
+  const futuros=data.futuros||[];
+  if(!futuros.length){
+    document.getElementById('fbody').innerHTML='<div class="fut-loading">Sin datos disponibles</div>';
+    return;
+  }
+
+  // Agrupar por cultivo
+  const byCultivo={};
+  futuros.forEach(f=>{
+    const k=f.cultivo||'Otro';
+    if(!byCultivo[k])byCultivo[k]=[];
+    byCultivo[k].push(f);
+  });
+
+  // Orden de cultivos
+  const orden=['Soja','Maíz','Trigo','Girasol','Sorgo','Cebada'];
+  const sorted=[];
+  orden.forEach(n=>{if(byCultivo[n])sorted.push(...byCultivo[n]);});
+  Object.keys(byCultivo).forEach(k=>{if(!orden.includes(k))sorted.push(...byCultivo[k]);});
+
+  const emojis={Soja:'🌱',Maíz:'🌽',Trigo:'🌾',Girasol:'🌻',Sorgo:'🌿',Cebada:'🟤'};
+  let lastCultivo='';
+
+  document.getElementById('fbody').innerHTML=sorted.map(f=>{
+    const isNew=f.cultivo!==lastCultivo;
+    lastCultivo=f.cultivo;
+    const icon=emojis[f.cultivo]||'•';
+    const varPct=f.variacion_pct??calcVar(f.ajuste_usd,f.ajuste_usd-f.variacion)||null;
+    const vCl=vCls(varPct);
+    const vol=f.volumen?parseInt(f.volumen).toLocaleString('es-AR'):'—';
+    const ia=f.interes_abierto?parseInt(f.interes_abierto).toLocaleString('es-AR'):'—';
+    return `<div class="frow" ${isNew?'style="border-top:1px solid var(--bb)"':''}>
+      <div class="fname">${isNew?`<span>${icon}</span>`:'<span style="opacity:0">·</span>'}<span>${isNew?f.cultivo:''}</span></div>
+      <div class="fpos">${f.posicion||'—'}</div>
+      <div class="fpr">${f.ajuste_usd?fmtUSD(parseFloat(f.ajuste_usd)):'—'}</div>
+      <div class="fbadge ${vCl}">${vTxt(varPct)}</div>
+      <div class="fdate">${vol}</div>
+      <div class="fdate">${ia}</div>
+      <div class="fdate">${f.vencimiento||'—'}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('fut-src-note').textContent=`Datos: Cierre Agropecuario Matba-Rofex · ${data.fecha||'Último cierre disponible'}`;
+}
+
+// ═══════════════════════════════════════
+// FETCH ALL
+// ═══════════════════════════════════════
+async function fetchAll(){
+  const btn=document.getElementById('btnr');
+  btn.disabled=true;btn.textContent='Cargando…';
+  await Promise.all([fetchDolar(),fetchGrassi(),fetchMatba()]);
+  const now=new Date().toLocaleTimeString('es-AR',{timeZone:'America/Argentina/Buenos_Aires',hour12:false});
+  document.getElementById('lupd').textContent='Actualizado: '+now;
+  btn.disabled=false;btn.textContent='↺ Actualizar';
+}
+
+// ═══════════════════════════════════════
 // START
-// ═══════════════════════════
+// ═══════════════════════════════════════
 initGrids();
 fetchAll();
-setInterval(fetchAll, 3 * 60 * 1000);
+setInterval(fetchAll,3*60*1000);
+document.addEventListener('keydown',e=>{if(e.key==='Escape')document.getElementById('modal').classList.remove('open');});
 </script>
 </body>
 </html>
