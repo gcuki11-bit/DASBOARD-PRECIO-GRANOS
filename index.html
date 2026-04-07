@@ -120,19 +120,19 @@ main{padding:24px 36px 36px}
 .chart-empty-txt{font-family:'DM Mono',monospace;font-size:10px;color:var(--tf);letter-spacing:.1em;text-align:center;line-height:1.7}
 .chart-src{font-family:'DM Mono',monospace;font-size:8px;color:var(--tf);margin-top:8px;text-align:right}
 
-.hisgcuki11-bit.github.io/DASBOARD-PRECIO-GRANOS/historico.jsont-table{margin-top:14px;background:var(--card);border:1px solid var(--b);overflow:hidden;max-height:260px;overflow-y:auto}
+.hist-table{margin-top:14px;background:var(--card);border:1px solid var(--b);overflow:hidden;max-height:260px;overflow-y:auto}
 .hist-hdr,.hist-row{display:grid;grid-template-columns:1.2fr 1fr 1fr 80px;padding:8px 14px;gap:4px;align-items:center}
 .hist-hdr{background:var(--surf);border-bottom:1px solid var(--b);position:sticky;top:0}
 .hc{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.13em;color:var(--tf);text-transform:uppercase}
 .hc.r{text-align:right}
 .hist-row{border-bottom:1px solid var(--b);transition:background .1s}
 .hist-row:last-child{border-bottom:none}
-.hist-row:hover{background:var(--cardh)}h
+.hist-row:hover{background:var(--cardh)}
 .hval{font-family:'DM Mono',monospace;font-size:12px;color:#fff}
 .hval.r{text-align:right}
 .hbadge{font-family:'DM Mono',monospace;font-size:10px;text-align:right;padding:2px 5px;border-radius:2px}
 .hbadge.pos{color:var(--green);background:rgba(74,222,128,.13)}
-.hbadge.neg{color:var(--red);background:rgba(248,113,113,.13)}h
+.hbadge.neg{color:var(--red);background:rgba(248,113,113,.13)}
 .hbadge.neu{color:var(--tf)}
 
 /* ── FUTUROS ── */
@@ -630,7 +630,7 @@ async function loadVariaciones(){
 async function fetchDolar(){
   setSt('df','lf','loading','Actualizando dólar…');
   try{
-    const r=await fetch('https://economia.awesomeapi.com.br/json/last/USD-ARS');
+    const r=await fetch('/api/usdars');
     const d=await r.json();
     const p=parseFloat(d['USDARS']?.bid);
     if(!p)throw new Error();
@@ -645,7 +645,7 @@ async function fetchDolar(){
 async function fetchGrassi(){
   setSt('dg','lg','loading','Actualizando Grassi…');
   try{
-    const [rP,rF]=await Promise.all([fetch('https://www.ggsa.com.ar/get_pizarra/'),fetch('https://www.ggsa.com.ar/get_futuros/')]);
+    const [rP,rF]=await Promise.all([fetch('https://www.ggsa.com.ar/get_pizarra/'),fetch('/api/ggsa')]);
     if(!rP.ok)throw new Error('HTTP '+rP.status);
     const [dP,dF]=await Promise.all([rP.json(),rF.json()]);
     const piz=dP.pizarra?.[0];
@@ -703,7 +703,7 @@ Necesito los precios de ajuste de TODAS las posiciones disponibles de: Soja, Ma�
 Fecha: ${hoy}. Respondé SOLO con JSON sin markdown:
 {"fecha":"DD/MM/YYYY","futuros":[{"cultivo":"Soja","posicion":"May-26","vencimiento":"Mayo 2026","ajuste_usd":290.5,"variacion_pct":-0.41,"volumen":45000,"interes_abierto":2800000}]}`;
   try{
-    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content:prompt}]})});
+    const res=await fetch('/api/matba',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content:prompt}]})});
     if(!res.ok)throw new Error('API '+res.status);
     const data=await res.json();
     const txt=(data.content?.find(b=>b.type==='text')?.text||'').replace(/```json\n?/g,'').replace(/```\n?/g,'').trim();
@@ -719,7 +719,7 @@ Fecha: ${hoy}. Respondé SOLO con JSON sin markdown:
 }
 async function fetchMatbaFallback(){
   try{
-    const r=await fetch('https://www.ggsa.com.ar/get_futuros/');
+    const r=await fetch('/api/ggsa');
     const d=await r.json();
     const matba=d.futuros?.[0]?.matba||{};
     const emojis={soja:'🌱',maiz:'🌽',trigo:'🌾'};
