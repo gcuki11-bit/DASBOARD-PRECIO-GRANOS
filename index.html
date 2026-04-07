@@ -404,80 +404,68 @@ async function renderModal(){
 
 // ═══════════════════════════
 // BCR HISTÓRICO
-// Scrapea cac.bcr.com.ar/es/precios-de-pizarra/consultas
-// params: product=ID&type=pizarra&date_start=YYYY-MM-DD&date_end=YYYY-MM-DD&period=day
-// ═══════════════════════════
-async function fetchBCRHistory(cropKey, days){
-  const crop=CROPS.find(c=>c.k===cropKey);
-  if(!crop?.bcr) return null;
+// ═══════════════════════════════════════════════════════
+// HISTÓRICO DESDE historico.json (mismo repo en GitHub)
+// El archivo se actualiza automáticamente con GitHub Actions
+// cada día hábil a las 19hs Argentina scrapeando la BCR.
+// raw.githubusercontent.com no tiene restricciones CORS.
+// ═══════════════════════════════════════════════════════
 
-  const cacheKey=`${cropKey}_${days}`;
-  // Cache de 1 hora
-  if(bcrCache[cacheKey] && (Date.now()-bcrCache[cacheKey].ts < 3600000)){
-    return bcrCache[cacheKey].data;
-  }
+// URL del JSON de datos históricos en el repo
+const HIST_URL = 'https://raw.githubusercontent.com/gcuki11-bit/DASBOARD-PRECIO-GRANOS/main/historico.json';
 
-  const today=new Date();
-  const fromDate=new Date();
-  fromDate.setDate(today.getDate()-days);
-  const f1=fromDate.toISOString().split('T')[0];
-  const f2=today.toISOString().split('T')[0];
+// Cache global de todos los datos (se carga una sola vez por sesión)
+let histAllData = null;
+let histLoadPromise = null;
 
-  const allData=[];
-  let page=0;
-  const maxPages = days > 1000 ? 80 : 40; // límite de seguridad
+async function loadHistData(){
+  if(histAllData) return histAllData;
+  if(histLoadPromise) return histLoadPromise;
 
-  setChartLoadingTxt(`Descargando datos BCR… página 1`);
+  histLoadPromise = fetch(HIST_URL)
+    .then(r => { if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+    .then(data => {
+      // Convertir fechas YYYY-MM-DD a timestamps
+      const converted = {};
+      for(const [key, arr] of Object.entries(data.productos||{})){
+        converted[key] = arr.map(d => ({
+          fecha: d.fecha.split('-').reverse().join('/'), // YYYY-MM-DD → DD/MM/YYYY
+          ts: new Date(d.fecha + 'T12:00:00-03:00').getTime(),
+          ars: d.ars
+        })).filter(d => !isNaN(d.ts) && d.ars > 0)
+          .sort((a,b) => a.ts - b.ts);
+      }
+      histAllData = { converted, updated: data.updated, fuente: data.fuente };
+      console.log('Histórico cargado:', data.updated,
+        Object.entries(converted).map(([k,v])=>`${k}:${v.length}`).join(' '));
+      return histAllData;
+    })
+    .catch(e => {
+      console.warn('Error cargando historico.json:', e.message);
+      histLoadPromise = null;
+      return null;
+    });
 
-  while(page < maxPages){
-    const url=`https://www.cac.bcr.com.ar/es/precios-de-pizarra/consultas?product=${crop.bcr}&type=pizarra&date_start=${f1}&date_end=${f2}&period=day&op=Filtrar${page>0?`&page=${page}`:''}`;
-    try{
-      const r=await fetch(url);
-      if(!r.ok) break;
-      const html=await r.text();
-      const parsed=parseBCRTable(html);
-      if(!parsed.length) break;
-      allData.push(...parsed);
-      // Verificar si hay más páginas
-      const hasNext = html.includes('class="pager__item--next"') || html.includes('>Siguiente<') || html.includes('>»<');
-      if(!hasNext) break;
-      page++;
-      setChartLoadingTxt(`Descargando datos BCR… página ${page+1} (${allData.length} registros)`);
-    }catch(e){break;}
-  }
-
-  if(!allData.length) return null;
-
-  // Deduplicar y ordenar
-  const seen=new Set();
-  const clean=allData.filter(d=>{if(seen.has(d.fecha))return false;seen.add(d.fecha);return true;});
-  clean.sort((a,b)=>a.ts-b.ts);
-
-  bcrCache[cacheKey]={ts:Date.now(), data:clean};
-  return clean;
+  return histLoadPromise;
 }
 
-function parseBCRTable(html){
-  // Parsear el HTML para extraer la tabla de precios
-  const parser=new DOMParser();
-  const doc=parser.parseFromString(html,'text/html');
-  const rows=doc.querySelectorAll('table tbody tr');
-  const data=[];
-  rows.forEach(r=>{
-    const cells=r.querySelectorAll('td');
-    if(cells.length<2) return;
-    const fechaStr=cells[0].textContent.trim(); // DD/MM/YYYY
-    const precioStr=cells[1].textContent.trim(); // $XXX.XXX,XX
-    if(!fechaStr.match(/\d{2}\/\d{2}\/\d{4}/)) return;
-    // Parsear precio ARS
-    const ars=parseFloat(precioStr.replace(/\$|\./g,'').replace(',','.'));
-    if(!ars||isNaN(ars)) return;
-    // Convertir fecha a timestamp
-    const [d,m,y]=fechaStr.split('/');
-    const ts=new Date(`${y}-${m}-${d}T12:00:00-03:00`).getTime();
-    data.push({fecha:fechaStr, ts, ars});
-  });
-  return data;
+async function fetchBCRHistory(cropKey, days){
+  setChartLoadingTxt('Cargando histórico de precios…');
+
+  const hist = await loadHistData();
+  if(!hist) return null;
+
+  const data = hist.converted[cropKey];
+  if(!data || !data.length) return null;
+
+  // Filtrar por período
+  if(days >= 9999) return data;
+  const cutoff = Date.now() - days * 24 * 3600 * 1000;
+  const filtered = data.filter(d => d.ts >= cutoff);
+
+  // Caching sencillo
+  bcrCache[`${cropKey}_${days}`] = { ts: Date.now(), data: filtered };
+  return filtered;
 }
 
 function showChartLoading(txt){
@@ -490,15 +478,14 @@ function showChartLoading(txt){
   document.getElementById('chart-src').textContent='';
 }
 function setChartLoadingTxt(t){const el=document.getElementById('m-loading-txt');if(el)el.textContent=t;}
-function showChartEmpty(){
+function showChartEmpty(msg){
   document.getElementById('m-loading').style.display='none';
   document.getElementById('m-empty').style.display='flex';
   document.getElementById('m-chart').style.display='none';
+  const txt=document.querySelector('.chart-empty-txt');
+  if(txt&&msg) txt.innerHTML=msg;
 }
 
-// ═══════════════════════════
-// RENDER MODAL
-// ═══════════════════════════
 function renderStats(s){
   const el=document.getElementById('m-stats');
   if(!s.length){el.innerHTML='';return;}
@@ -608,16 +595,20 @@ function setBadge(id,pct){const el=document.getElementById(id);if(!el)return;el.
 // Carga 1 año de histórico en background y calcula variaciones 24hs/7d/1m
 // ═══════════════════════════
 async function loadVariaciones(){
+  // Precachear el JSON histórico completo una sola vez
+  const hist = await loadHistData();
+  if(!hist) return;
+
   for(const c of CROPS){
-    if(!c.bcr) continue;
+    const data = hist.converted[c.k];
+    if(!data || !data.length) continue;
     try{
-      const data = await fetchBCRHistory(c.k, 35); // 35 días para tener 1m
-      if(!data||!data.length) continue;
       const cur = data[data.length-1].ars;
       const now = Date.now();
-      const p24 = data.find(d=>d.ts>=now-26*3600000); // ~1 día hábil
-      const p7d = data.find(d=>d.ts>=now-9*864e5);
-      const p1m = data[0]; // primer dato del rango
+      // Buscar precios hace 1 día hábil (~26h), 7 días, 30 días
+      const p24 = data.slice().reverse().find(d => d.ts <= now - 20*3600000);
+      const p7d  = data.slice().reverse().find(d => d.ts <= now - 6*864e5);
+      const p1m  = data.slice().reverse().find(d => d.ts <= now - 28*864e5);
 
       setChip('va-'+c.k,'24hs', calcVar(cur, p24?.ars));
       setChip('va-'+c.k,'7d',   calcVar(cur, p7d?.ars));
