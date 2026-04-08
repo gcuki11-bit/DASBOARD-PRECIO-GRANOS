@@ -408,7 +408,7 @@ async function renderModal(){
 // HISTÓRICO DESDE historico.json (mismo repo en GitHub)
 // El archivo se actualiza automáticamente con GitHub Actions
 // cada día hábil a las 19hs Argentina scrapeando la BCR.
-// gcuki11-bit.github.io.com no tiene restricciones CORS.
+// raw.githubusercontent.com no tiene restricciones CORS.
 // ═══════════════════════════════════════════════════════
 
 // URL del JSON de datos históricos en el repo
@@ -630,7 +630,7 @@ async function loadVariaciones(){
 async function fetchDolar(){
   setSt('df','lf','loading','Actualizando dólar…');
   try{
-    const r=await fetch('/api/usdars');
+    const r=await fetch('https://economia.awesomeapi.com.br/json/last/USD-ARS');
     const d=await r.json();
     const p=parseFloat(d['USDARS']?.bid);
     if(!p)throw new Error();
@@ -645,7 +645,7 @@ async function fetchDolar(){
 async function fetchGrassi(){
   setSt('dg','lg','loading','Actualizando Grassi…');
   try{
-    const [rP,rF]=await Promise.all([fetch('https://www.ggsa.com.ar/get_pizarra/'),fetch('/api/ggsa')]);
+    const [rP,rF]=await Promise.all([fetch('https://www.ggsa.com.ar/get_pizarra/'),fetch('https://www.ggsa.com.ar/get_futuros/')]);
     if(!rP.ok)throw new Error('HTTP '+rP.status);
     const [dP,dF]=await Promise.all([rP.json(),rF.json()]);
     const piz=dP.pizarra?.[0];
@@ -703,7 +703,7 @@ Necesito los precios de ajuste de TODAS las posiciones disponibles de: Soja, Ma�
 Fecha: ${hoy}. Respondé SOLO con JSON sin markdown:
 {"fecha":"DD/MM/YYYY","futuros":[{"cultivo":"Soja","posicion":"May-26","vencimiento":"Mayo 2026","ajuste_usd":290.5,"variacion_pct":-0.41,"volumen":45000,"interes_abierto":2800000}]}`;
   try{
-    const res=await fetch('/api/matba',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content:prompt}]})});
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content:prompt}]})});
     if(!res.ok)throw new Error('API '+res.status);
     const data=await res.json();
     const txt=(data.content?.find(b=>b.type==='text')?.text||'').replace(/```json\n?/g,'').replace(/```\n?/g,'').trim();
@@ -719,7 +719,7 @@ Fecha: ${hoy}. Respondé SOLO con JSON sin markdown:
 }
 async function fetchMatbaFallback(){
   try{
-    const r=await fetch('/api/ggsa');
+    const r=await fetch('https://www.ggsa.com.ar/get_futuros/');
     const d=await r.json();
     const matba=d.futuros?.[0]?.matba||{};
     const emojis={soja:'🌱',maiz:'🌽',trigo:'🌾'};
