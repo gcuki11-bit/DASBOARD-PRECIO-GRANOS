@@ -412,7 +412,7 @@ async function renderModal(){
 // ═══════════════════════════════════════════════════════
 
 // URL del JSON de datos históricos en el repo
-const HIST_URL = 'https://gcuki11-bit.github.io/DASBOARD-PRECIO-GRANOS/historico.json';
+const HIST_URL = 'https://gcuki11-bit.github.io/DASBOARD-PRECIO-GRANOS/historico.json?v=' + Date.now();
 
 // Cache global de todos los datos (se carga una sola vez por sesión)
 let histAllData = null;
