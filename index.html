@@ -157,6 +157,30 @@ main{padding:24px 36px 36px}
 .fut-note{font-family:'DM Mono',monospace;font-size:8px;color:var(--tf);letter-spacing:.09em;margin-top:8px;text-align:right}
 .fut-loading{padding:30px;text-align:center;font-family:'DM Mono',monospace;font-size:10px;color:var(--tf);letter-spacing:.1em}
 
+
+/* ── SELECTOR TC ── */
+.tc-bar{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.tc-lbl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.13em;color:var(--tf);text-transform:uppercase;white-space:nowrap}
+.tc-opts{display:flex;gap:3px}
+.tc-btn{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:6px 12px;border:1px solid var(--b);background:none;color:#fff;cursor:pointer;transition:all .15s}
+.tc-btn:hover{border-color:var(--bb)}
+.tc-btn.active{background:rgba(96,165,250,.13);border-color:var(--blue);color:var(--blue)}
+.tc-val{font-family:'DM Mono',monospace;font-size:11px;color:var(--tf);margin-left:4px}
+
+
+/* ── FUTUROS BCR ── */
+.bcr-wrap{overflow-x:auto;margin-bottom:6px}
+.bcr-table{width:100%;border-collapse:collapse;min-width:700px}
+.bcr-table th{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.12em;color:var(--tf);text-transform:uppercase;padding:9px 14px;background:var(--card);border-bottom:1px solid var(--bb);text-align:right}
+.bcr-table th:first-child{text-align:left}
+.bcr-table td{font-family:'DM Mono',monospace;font-size:12px;color:#fff;padding:8px 14px;border-bottom:1px solid var(--b);text-align:right}
+.bcr-table td:first-child{text-align:left;color:var(--amber);font-weight:500}
+.bcr-table tr:hover td{background:var(--cardh)}
+.bcr-table .var-pos{color:var(--green)}.bcr-table .var-neg{color:var(--red)}.bcr-table .var-neu{color:var(--tf)}
+.bcr-table .empty{color:var(--tf)}
+.bcr-src{font-family:'DM Mono',monospace;font-size:8px;color:var(--tf);text-align:right;margin-top:6px}
+.bcr-loading{padding:24px;text-align:center;font-family:'DM Mono',monospace;font-size:10px;color:var(--tf)}
+
 .rgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(115px,1fr));gap:2px;margin-top:14px}
 .rcard{background:var(--card);border:1px solid var(--b);padding:13px 14px 10px;position:relative;overflow:hidden}
 .rca{position:absolute;top:0;left:0;width:3px;height:100%;background:var(--amber)}
@@ -259,7 +283,7 @@ footer{padding:14px 36px 24px;border-top:1px solid var(--b);display:flex;justify
   </div>
   <div class="sbar">
     <div class="pill"><div class="dot loading" id="dg"></div><span id="lg">Conectando Grassi…</span></div>
-    <div class="pill"><div class="dot loading" id="dm"></div><span id="lm">Cargando Matba-Rofex…</span></div>
+    <div class="pill"><div class="dot loading" id="dm"></div><span id="lm">Cargando BCR…</span></div>
     <div class="pill"><div class="dot loading" id="df"></div><span id="lf">Cargando dólar…</span></div>
   </div>
 </header>
@@ -276,23 +300,37 @@ footer{padding:14px 36px 24px;border-top:1px solid var(--b);display:flex;justify
     <div class="grid" id="grid-ars"></div>
   </div>
   <div class="panel" id="panel-usd">
-    <div class="sh"><div class="sh-t usd">Precios en USD · USD/tn</div><div class="sh-line"></div><div class="sh-src">ARS ÷ DÓLAR SPOT · Click para ver histórico</div></div>
+    <div class="sh"><div class="sh-t usd">Precios en USD · USD/tn</div><div class="sh-line"></div><div class="sh-src">Click en una card para ver historial</div></div>
+    <div class="tc-bar">
+      <span class="tc-lbl">Tipo de cambio:</span>
+      <div class="tc-opts">
+        <button class="tc-btn active" data-tc="oficial" onclick="setTC('oficial',this)">Oficial BNA</button>
+        <button class="tc-btn" data-tc="mae" onclick="setTC('mae',this)">MAE</button>
+        <button class="tc-btn" data-tc="libre" onclick="setTC('libre',this)">Libre</button>
+      </div>
+      <span class="tc-val" id="tc-display">$ —</span>
+    </div>
     <div class="grid" id="grid-usd"></div>
   </div>
   <div class="panel" id="panel-fut">
-    <div class="sh"><div class="sh-t fut">Cierre Agropecuario · Futuros USD/tn</div><div class="sh-line"></div><div class="sh-src">MATBA-ROFEX</div></div>
-    <div class="ftable">
-      <div class="fgrid">
-        <div class="fhdr">
-          <div class="fc">Cultivo</div><div class="fc">Posición</div>
-          <div class="fc r">Ajuste USD/tn</div><div class="fc r">Var. día</div>
-          <div class="fc r">Vol. (tn)</div><div class="fc r">Int. Abierto</div>
-          <div class="fc r">Vencimiento</div>
-        </div>
-        <div id="fbody"><div class="fut-loading">Consultando Matba-Rofex…</div></div>
-      </div>
+    <!-- BCR: Cotizaciones Internacionales CBOT -->
+    <div class="sh"><div class="sh-t fut">Futuros CBOT · USD/tn</div><div class="sh-line"></div><div class="sh-src">BCR · bcr.com.ar</div></div>
+    <div class="bcr-wrap">
+      <table class="bcr-table" id="bcr-table">
+        <thead><tr>
+          <th>Posición</th>
+          <th>Soja</th><th>Var.</th>
+          <th>Maíz</th><th>Var.</th>
+          <th>Trigo Ch.</th><th>Var.</th>
+          <th>Ac. Soja</th><th>Var.</th>
+          <th>Har. Soja</th><th>Var.</th>
+        </tr></thead>
+        <tbody id="bcr-body"><tr><td colspan="11" class="bcr-loading">Cargando BCR…</td></tr></tbody>
+      </table>
     </div>
-    <div class="fut-note" id="fut-note"></div>
+    <div class="bcr-src" id="bcr-src"></div>
+
+    <!-- Dólar Futuro ROFEX (via Grassi) -->
     <div style="margin-top:24px">
       <div class="sh"><div class="sh-t fut">Dólar Futuro ROFEX</div><div class="sh-line"></div><div class="sh-src">MATBA-ROFEX · ARS/USD</div></div>
       <div class="rgrid" id="rgrid"></div>
@@ -301,7 +339,7 @@ footer{padding:14px 36px 24px;border-top:1px solid var(--b);display:flex;justify
 </main>
 
 <footer>
-  <div class="fnote">Precios ARS: Grassi (ggsa.com.ar) · USD: AwesomeAPI · Futuros: Matba-Rofex via Claude AI · Histórico: CAC-BCR (cac.bcr.com.ar) desde 2002 · Auto-refresh 3min</div>
+  <div class="fnote">Precios ARS: Grassi (ggsa.com.ar) · USD Futuros: BCR Cotizaciones Internacionales · TC: Grassi · Histórico embebido · Auto-refresh 10min</div>
   <div class="fright">
     <div class="lupd" id="lupd">—</div>
     <button class="btnr" id="btnr" onclick="fetchAll()">↺ Actualizar</button>
@@ -325,6 +363,9 @@ const CROPS = [
 // ESTADO
 // ═══════════════════════════
 let prevArs={}, dolarSpot=null, chartInst=null;
+// Tipos de cambio disponibles
+let tcData = {oficial: null, mae: null, libre: null};
+let tcActivo = 'oficial'; // 'oficial' | 'mae' | 'libre'
 let activeKey=null, activeMode='ars', activePeriod=365;
 let bcrCache={}; // {key_days: [{fecha, ars, usd}]}
 
@@ -386,20 +427,45 @@ function setPeriod(d){
 
 async function renderModal(){
   if(!activeKey)return;
-  showChartLoading('Cargando datos históricos BCR…');
-  const data=await fetchBCRHistory(activeKey,activePeriod);
-  if(!data||!data.length){showChartEmpty();return;}
+  if(activeMode==='usd'){
+    renderModalCBOT();
+  } else {
+    await renderModalARS();
+  }
+}
 
-  const series=data.map(d=>({
-    ts: d.ts, label: d.fecha,
-    val: activeMode==='usd'&&dolarSpot ? d.ars/dolarSpot : d.ars,
-    ars: d.ars
-  }));
+async function renderModalARS(){
+  showChartLoading('Cargando histórico ARS…');
+  try{
+    const data=await fetchBCRHistory(activeKey,activePeriod);
+    if(!data||!data.length){showChartEmpty('Sin datos para este período.');return;}
+    const series=data.map(d=>({ts:d.ts,label:d.fecha,val:d.ars,ars:d.ars}));
+    renderStats(series,'ars');
+    renderChart(series,'ars');
+    renderTable(data,null);
+    document.getElementById('chart-src').textContent=`Fuente: BCR Cámara Arbitral · ${data.length} registros · ARS/tn`;
+  }catch(e){showChartEmpty(`Error: ${e.message}`);}
+}
 
-  renderStats(series);
-  renderChart(series);
-  renderTable(series);
-  document.getElementById('chart-src').textContent=`Fuente: Cámara Arbitral de Cereales BCR (cac.bcr.com.ar) · ${data.length} registros · Rosario`;
+function renderModalCBOT(){
+  // Solo soja, maiz, trigo tienen datos CBOT
+  const cbotKey = ['soja','maiz','trigo'].includes(activeKey) ? activeKey : null;
+  if(!cbotKey||!CBOT_HIST[cbotKey]){
+    showChartEmpty(`No hay datos CBOT para este cultivo.<br>CBOT cubre Soja, Maíz y Trigo.<br>Usá la pestaña <b>ARS/tn</b> para ver el histórico local.`);
+    return;
+  }
+  const cutoff=activePeriod>=9999?0:Date.now()-activePeriod*24*3600*1000;
+  const all=CBOT_HIST[cbotKey].map(d=>({
+    fecha:d.fecha.split('-').reverse().join('/'),
+    ts:new Date(d.fecha+'T12:00:00-03:00').getTime(),
+    val:d.usd, usd:d.usd
+  })).filter(d=>d.ts>=cutoff&&!isNaN(d.ts));
+  if(!all.length){showChartEmpty('Sin datos para este período.');return;}
+  renderStats(all,'usd');
+  renderChart(all,'usd');
+  renderTable(null,all);
+  document.getElementById('chart-src').textContent=
+    `Fuente: CBOT Chicago · ${activeKey.charAt(0).toUpperCase()+activeKey.slice(1)} · ${all.length} semanas · USD/tn`;
 }
 
 // ═══════════════════════════
@@ -440,6 +506,9 @@ function convertirHistData(data){
   }
   return { converted, updated: data.updated || 'embebido', fuente: data.fuente || 'BCR' };
 }
+
+// Datos históricos CBOT (USD/tn) embebidos — Soja, Maíz, Trigo Chicago
+const CBOT_HIST = {"updated":"2026-04-09","fuente":"CBOT Chicago · Soja May, Maíz Dic, Trigo Dic · USD/tn","nota":"Precios de referencia internacional CBOT. No son precios locales FOB Rosario.","soja":[{"fecha":"2021-04-08","usd":488.87},{"fecha":"2021-04-15","usd":493.52},{"fecha":"2021-04-22","usd":502.83},{"fecha":"2021-04-29","usd":507.9},{"fecha":"2021-05-06","usd":520.26},{"fecha":"2021-05-13","usd":522.02},{"fecha":"2021-05-20","usd":535.1},{"fecha":"2021-05-27","usd":541.5},{"fecha":"2021-06-03","usd":542.03},{"fecha":"2021-06-10","usd":526.26},{"fecha":"2021-06-17","usd":525.15},{"fecha":"2021-06-24","usd":520.29},{"fecha":"2021-07-01","usd":510.92},{"fecha":"2021-07-08","usd":512.97},{"fecha":"2021-07-15","usd":503.04},{"fecha":"2021-07-22","usd":491.82},{"fecha":"2021-07-29","usd":493.07},{"fecha":"2021-08-05","usd":478.52},{"fecha":"2021-08-12","usd":476.24},{"fecha":"2021-08-19","usd":466.7},{"fecha":"2021-08-26","usd":464.59},{"fecha":"2021-09-02","usd":464.24},{"fecha":"2021-09-09","usd":458.11},{"fecha":"2021-09-16","usd":466.79},{"fecha":"2021-09-23","usd":465.62},{"fecha":"2021-09-30","usd":462.18},{"fecha":"2021-10-07","usd":465.12},{"fecha":"2021-10-14","usd":469.05},{"fecha":"2021-10-21","usd":462.07},{"fecha":"2021-10-28","usd":468.98},{"fecha":"2021-11-04","usd":465.91},{"fecha":"2021-11-11","usd":469.74},{"fecha":"2021-11-18","usd":465.26},{"fecha":"2021-11-25","usd":470.69},{"fecha":"2021-12-02","usd":465.91},{"fecha":"2021-12-09","usd":479.71},{"fecha":"2021-12-16","usd":487.59},{"fecha":"2021-12-23","usd":495.41},{"fecha":"2021-12-30","usd":512.94},{"fecha":"2022-01-06","usd":514.89},{"fecha":"2022-01-13","usd":531.47},{"fecha":"2022-01-20","usd":536.36},{"fecha":"2022-01-27","usd":539.65},{"fecha":"2022-02-03","usd":556.26},{"fecha":"2022-02-10","usd":560.14},{"fecha":"2022-02-17","usd":570.28},{"fecha":"2022-02-24","usd":582.18},{"fecha":"2022-03-03","usd":588.74},{"fecha":"2022-03-10","usd":595.11},{"fecha":"2022-03-17","usd":599.86},{"fecha":"2022-03-24","usd":592.72},{"fecha":"2022-03-31","usd":601.38},{"fecha":"2022-04-07","usd":597.56},{"fecha":"2022-04-14","usd":607.69},{"fecha":"2022-04-21","usd":610.92},{"fecha":"2022-04-28","usd":602.78},{"fecha":"2022-05-05","usd":609.33},{"fecha":"2022-05-12","usd":608.46},{"fecha":"2022-05-19","usd":610.2},{"fecha":"2022-05-26","usd":615.33},{"fecha":"2022-06-02","usd":623.79},{"fecha":"2022-06-09","usd":618.39},{"fecha":"2022-06-16","usd":602.99},{"fecha":"2022-06-23","usd":596.02},{"fecha":"2022-06-30","usd":590.53},{"fecha":"2022-07-07","usd":585.23},{"fecha":"2022-07-14","usd":582.65},{"fecha":"2022-07-21","usd":574.33},{"fecha":"2022-07-28","usd":566.77},{"fecha":"2022-08-04","usd":560.31},{"fecha":"2022-08-11","usd":562.83},{"fecha":"2022-08-18","usd":557.09},{"fecha":"2022-08-25","usd":545.05},{"fecha":"2022-09-01","usd":537.85},{"fecha":"2022-09-08","usd":532.04},{"fecha":"2022-09-15","usd":540.82},{"fecha":"2022-09-22","usd":528.14},{"fecha":"2022-09-29","usd":530.16},{"fecha":"2022-10-06","usd":532.71},{"fecha":"2022-10-13","usd":526.64},{"fecha":"2022-10-20","usd":525.36},{"fecha":"2022-10-27","usd":520.74},{"fecha":"2022-11-03","usd":523.92},{"fecha":"2022-11-10","usd":520.75},{"fecha":"2022-11-17","usd":512.47},{"fecha":"2022-11-24","usd":511.6},{"fecha":"2022-12-01","usd":508.57},{"fecha":"2022-12-08","usd":513.28},{"fecha":"2022-12-15","usd":512.84},{"fecha":"2022-12-22","usd":515.72},{"fecha":"2022-12-29","usd":519.22},{"fecha":"2023-01-05","usd":518.36},{"fecha":"2023-01-12","usd":508.73},{"fecha":"2023-01-19","usd":509.42},{"fecha":"2023-01-26","usd":520.17},{"fecha":"2023-02-02","usd":521.24},{"fecha":"2023-02-09","usd":518.11},{"fecha":"2023-02-16","usd":513.87},{"fecha":"2023-02-23","usd":524.17},{"fecha":"2023-03-02","usd":517.15},{"fecha":"2023-03-09","usd":512.17},{"fecha":"2023-03-16","usd":514.73},{"fecha":"2023-03-23","usd":508.45},{"fecha":"2023-03-30","usd":502.38},{"fecha":"2023-04-06","usd":507.7},{"fecha":"2023-04-13","usd":497.37},{"fecha":"2023-04-20","usd":492.58},{"fecha":"2023-04-27","usd":496.98},{"fecha":"2023-05-04","usd":486.78},{"fecha":"2023-05-11","usd":493.25},{"fecha":"2023-05-18","usd":491.46},{"fecha":"2023-05-25","usd":483.44},{"fecha":"2023-06-01","usd":474.77},{"fecha":"2023-06-08","usd":474.72},{"fecha":"2023-06-15","usd":474.62},{"fecha":"2023-06-22","usd":471.73},{"fecha":"2023-06-29","usd":472.46},{"fecha":"2023-07-06","usd":477.85},{"fecha":"2023-07-13","usd":469.37},{"fecha":"2023-07-20","usd":466.97},{"fecha":"2023-07-27","usd":473.23},{"fecha":"2023-08-03","usd":471.29},{"fecha":"2023-08-10","usd":465.37},{"fecha":"2023-08-17","usd":461.54},{"fecha":"2023-08-24","usd":459.54},{"fecha":"2023-08-31","usd":455.47},{"fecha":"2023-09-07","usd":457.75},{"fecha":"2023-09-14","usd":461.04},{"fecha":"2023-09-21","usd":457.77},{"fecha":"2023-09-28","usd":462.36},{"fecha":"2023-10-05","usd":456.8},{"fecha":"2023-10-12","usd":450.39},{"fecha":"2023-10-19","usd":453.32},{"fecha":"2023-10-26","usd":458.21},{"fecha":"2023-11-02","usd":453.58},{"fecha":"2023-11-09","usd":449.75},{"fecha":"2023-11-16","usd":456.61},{"fecha":"2023-11-23","usd":453.07},{"fecha":"2023-11-30","usd":444.9},{"fecha":"2023-12-07","usd":447.62},{"fecha":"2023-12-14","usd":446.75},{"fecha":"2023-12-21","usd":442.15},{"fecha":"2023-12-28","usd":445.86},{"fecha":"2024-01-04","usd":444.52},{"fecha":"2024-01-11","usd":437.98},{"fecha":"2024-01-18","usd":444.6},{"fecha":"2024-01-25","usd":436.24},{"fecha":"2024-02-01","usd":433.39},{"fecha":"2024-02-08","usd":436.43},{"fecha":"2024-02-15","usd":430.98},{"fecha":"2024-02-22","usd":433.74},{"fecha":"2024-02-29","usd":432.15},{"fecha":"2024-03-07","usd":430.91},{"fecha":"2024-03-14","usd":421.89},{"fecha":"2024-03-21","usd":419.0},{"fecha":"2024-03-28","usd":420.48},{"fecha":"2024-04-04","usd":419.81},{"fecha":"2024-04-11","usd":415.09},{"fecha":"2024-04-18","usd":411.56},{"fecha":"2024-04-25","usd":411.68},{"fecha":"2024-05-02","usd":407.26},{"fecha":"2024-05-09","usd":410.65},{"fecha":"2024-05-16","usd":403.1},{"fecha":"2024-05-23","usd":401.33},{"fecha":"2024-05-30","usd":396.12},{"fecha":"2024-06-06","usd":402.69},{"fecha":"2024-06-13","usd":391.37},{"fecha":"2024-06-20","usd":392.1},{"fecha":"2024-06-27","usd":392.49},{"fecha":"2024-07-04","usd":385.39},{"fecha":"2024-07-11","usd":385.92},{"fecha":"2024-07-18","usd":385.17},{"fecha":"2024-07-25","usd":380.93},{"fecha":"2024-08-01","usd":383.56},{"fecha":"2024-08-08","usd":373.59},{"fecha":"2024-08-15","usd":374.23},{"fecha":"2024-08-22","usd":372.65},{"fecha":"2024-08-29","usd":372.2},{"fecha":"2024-09-05","usd":370.59},{"fecha":"2024-09-12","usd":368.88},{"fecha":"2024-09-19","usd":365.61},{"fecha":"2024-09-26","usd":371.41},{"fecha":"2024-10-03","usd":363.62},{"fecha":"2024-10-10","usd":362.09},{"fecha":"2024-10-17","usd":366.9},{"fecha":"2024-10-24","usd":361.33},{"fecha":"2024-10-31","usd":363.08},{"fecha":"2024-11-07","usd":360.96},{"fecha":"2024-11-14","usd":360.27},{"fecha":"2024-11-21","usd":360.37},{"fecha":"2024-11-28","usd":362.52},{"fecha":"2024-12-05","usd":363.99},{"fecha":"2024-12-12","usd":363.54},{"fecha":"2024-12-19","usd":363.04},{"fecha":"2024-12-26","usd":365.13},{"fecha":"2025-01-02","usd":365.74},{"fecha":"2025-01-09","usd":367.55},{"fecha":"2025-01-16","usd":361.83},{"fecha":"2025-01-23","usd":364.88},{"fecha":"2025-01-30","usd":364.01},{"fecha":"2025-02-06","usd":369.92},{"fecha":"2025-02-13","usd":369.75},{"fecha":"2025-02-20","usd":365.47},{"fecha":"2025-02-27","usd":367.62},{"fecha":"2025-03-06","usd":371.69},{"fecha":"2025-03-13","usd":372.56},{"fecha":"2025-03-20","usd":366.96},{"fecha":"2025-03-27","usd":364.14},{"fecha":"2025-04-03","usd":365.83},{"fecha":"2025-04-10","usd":365.82},{"fecha":"2025-04-17","usd":365.66},{"fecha":"2025-04-24","usd":365.38},{"fecha":"2025-05-01","usd":363.92},{"fecha":"2025-05-08","usd":361.59},{"fecha":"2025-05-15","usd":359.04},{"fecha":"2025-05-22","usd":362.16},{"fecha":"2025-05-29","usd":363.7},{"fecha":"2025-06-05","usd":363.26},{"fecha":"2025-06-12","usd":359.32},{"fecha":"2025-06-19","usd":360.04},{"fecha":"2025-06-26","usd":355.16},{"fecha":"2025-07-03","usd":354.07},{"fecha":"2025-07-10","usd":356.03},{"fecha":"2025-07-17","usd":354.24},{"fecha":"2025-07-24","usd":351.45},{"fecha":"2025-07-31","usd":354.82},{"fecha":"2025-08-07","usd":354.87},{"fecha":"2025-08-14","usd":347.82},{"fecha":"2025-08-21","usd":350.96},{"fecha":"2025-08-28","usd":352.46},{"fecha":"2025-09-04","usd":350.6},{"fecha":"2025-09-11","usd":351.34},{"fecha":"2025-09-18","usd":351.01},{"fecha":"2025-09-25","usd":353.78},{"fecha":"2025-10-02","usd":351.59},{"fecha":"2025-10-09","usd":352.99},{"fecha":"2025-10-16","usd":361.7},{"fecha":"2025-10-23","usd":361.28},{"fecha":"2025-10-30","usd":357.63},{"fecha":"2025-11-06","usd":363.96},{"fecha":"2025-11-13","usd":358.15},{"fecha":"2025-11-20","usd":365.75},{"fecha":"2025-11-27","usd":367.35},{"fecha":"2025-12-04","usd":368.35},{"fecha":"2025-12-11","usd":370.65},{"fecha":"2025-12-18","usd":374.55},{"fecha":"2025-12-25","usd":371.09},{"fecha":"2026-01-01","usd":375.38},{"fecha":"2026-01-08","usd":381.88},{"fecha":"2026-01-15","usd":379.36},{"fecha":"2026-01-22","usd":379.46},{"fecha":"2026-01-29","usd":384.53},{"fecha":"2026-02-05","usd":390.49},{"fecha":"2026-02-12","usd":391.63},{"fecha":"2026-02-19","usd":389.87},{"fecha":"2026-02-26","usd":392.48},{"fecha":"2026-03-05","usd":395.02},{"fecha":"2026-03-12","usd":408.16},{"fecha":"2026-03-19","usd":411.89},{"fecha":"2026-03-26","usd":414.88},{"fecha":"2026-04-02","usd":427.01},{"fecha":"2026-04-07","usd":432.0}],"maiz":[{"fecha":"2021-04-08","usd":217.93},{"fecha":"2021-04-15","usd":227.06},{"fecha":"2021-04-22","usd":235.58},{"fecha":"2021-04-29","usd":239.91},{"fecha":"2021-05-06","usd":247.54},{"fecha":"2021-05-13","usd":252.53},{"fecha":"2021-05-20","usd":259.38},{"fecha":"2021-05-27","usd":265.51},{"fecha":"2021-06-03","usd":266.09},{"fecha":"2021-06-10","usd":263.81},{"fecha":"2021-06-17","usd":259.33},{"fecha":"2021-06-24","usd":256.13},{"fecha":"2021-07-01","usd":248.82},{"fecha":"2021-07-08","usd":247.78},{"fecha":"2021-07-15","usd":241.62},{"fecha":"2021-07-22","usd":236.78},{"fecha":"2021-07-29","usd":233.65},{"fecha":"2021-08-05","usd":226.87},{"fecha":"2021-08-12","usd":222.1},{"fecha":"2021-08-19","usd":216.35},{"fecha":"2021-08-26","usd":213.17},{"fecha":"2021-09-02","usd":208.52},{"fecha":"2021-09-09","usd":210.56},{"fecha":"2021-09-16","usd":214.13},{"fecha":"2021-09-23","usd":212.61},{"fecha":"2021-09-30","usd":210.97},{"fecha":"2021-10-07","usd":214.77},{"fecha":"2021-10-14","usd":214.48},{"fecha":"2021-10-21","usd":214.25},{"fecha":"2021-10-28","usd":214.01},{"fecha":"2021-11-04","usd":218.32},{"fecha":"2021-11-11","usd":216.94},{"fecha":"2021-11-18","usd":218.29},{"fecha":"2021-11-25","usd":218.77},{"fecha":"2021-12-02","usd":222.58},{"fecha":"2021-12-09","usd":223.98},{"fecha":"2021-12-16","usd":232.45},{"fecha":"2021-12-23","usd":234.84},{"fecha":"2021-12-30","usd":239.71},{"fecha":"2022-01-06","usd":247.22},{"fecha":"2022-01-13","usd":252.52},{"fecha":"2022-01-20","usd":257.38},{"fecha":"2022-01-27","usd":260.51},{"fecha":"2022-02-03","usd":266.68},{"fecha":"2022-02-10","usd":269.51},{"fecha":"2022-02-17","usd":279.15},{"fecha":"2022-02-24","usd":280.09},{"fecha":"2022-03-03","usd":284.08},{"fecha":"2022-03-10","usd":286.17},{"fecha":"2022-03-17","usd":290.81},{"fecha":"2022-03-24","usd":288.76},{"fecha":"2022-03-31","usd":292.47},{"fecha":"2022-04-07","usd":293.66},{"fecha":"2022-04-14","usd":293.19},{"fecha":"2022-04-21","usd":291.53},{"fecha":"2022-04-28","usd":291.7},{"fecha":"2022-05-05","usd":298.04},{"fecha":"2022-05-12","usd":294.4},{"fecha":"2022-05-19","usd":299.21},{"fecha":"2022-05-26","usd":299.27},{"fecha":"2022-06-02","usd":300.91},{"fecha":"2022-06-09","usd":292.53},{"fecha":"2022-06-16","usd":291.71},{"fecha":"2022-06-23","usd":290.56},{"fecha":"2022-06-30","usd":281.33},{"fecha":"2022-07-07","usd":281.98},{"fecha":"2022-07-14","usd":273.42},{"fecha":"2022-07-21","usd":275.13},{"fecha":"2022-07-28","usd":268.51},{"fecha":"2022-08-04","usd":264.58},{"fecha":"2022-08-11","usd":261.01},{"fecha":"2022-08-18","usd":256.67},{"fecha":"2022-08-25","usd":255.31},{"fecha":"2022-09-01","usd":248.87},{"fecha":"2022-09-08","usd":252.22},{"fecha":"2022-09-15","usd":249.12},{"fecha":"2022-09-22","usd":248.88},{"fecha":"2022-09-29","usd":245.44},{"fecha":"2022-10-06","usd":246.99},{"fecha":"2022-10-13","usd":245.72},{"fecha":"2022-10-20","usd":246.28},{"fecha":"2022-10-27","usd":241.1},{"fecha":"2022-11-03","usd":241.02},{"fecha":"2022-11-10","usd":239.57},{"fecha":"2022-11-17","usd":239.19},{"fecha":"2022-11-24","usd":242.59},{"fecha":"2022-12-01","usd":238.82},{"fecha":"2022-12-08","usd":242.69},{"fecha":"2022-12-15","usd":241.81},{"fecha":"2022-12-22","usd":241.48},{"fecha":"2022-12-29","usd":237.14},{"fecha":"2023-01-05","usd":240.13},{"fecha":"2023-01-12","usd":240.95},{"fecha":"2023-01-19","usd":241.01},{"fecha":"2023-01-26","usd":238.24},{"fecha":"2023-02-02","usd":239.97},{"fecha":"2023-02-09","usd":238.59},{"fecha":"2023-02-16","usd":239.6},{"fecha":"2023-02-23","usd":237.85},{"fecha":"2023-03-02","usd":238.37},{"fecha":"2023-03-09","usd":240.35},{"fecha":"2023-03-16","usd":238.6},{"fecha":"2023-03-23","usd":236.29},{"fecha":"2023-03-30","usd":231.49},{"fecha":"2023-04-06","usd":233.81},{"fecha":"2023-04-13","usd":228.54},{"fecha":"2023-04-20","usd":228.18},{"fecha":"2023-04-27","usd":226.03},{"fecha":"2023-05-04","usd":228.14},{"fecha":"2023-05-11","usd":222.88},{"fecha":"2023-05-18","usd":221.9},{"fecha":"2023-05-25","usd":218.96},{"fecha":"2023-06-01","usd":219.99},{"fecha":"2023-06-08","usd":216.06},{"fecha":"2023-06-15","usd":214.21},{"fecha":"2023-06-22","usd":214.8},{"fecha":"2023-06-29","usd":209.08},{"fecha":"2023-07-06","usd":207.26},{"fecha":"2023-07-13","usd":204.68},{"fecha":"2023-07-20","usd":203.13},{"fecha":"2023-07-27","usd":203.73},{"fecha":"2023-08-03","usd":199.26},{"fecha":"2023-08-10","usd":194.98},{"fecha":"2023-08-17","usd":195.33},{"fecha":"2023-08-24","usd":190.54},{"fecha":"2023-08-31","usd":191.02},{"fecha":"2023-09-07","usd":190.52},{"fecha":"2023-09-14","usd":189.39},{"fecha":"2023-09-21","usd":188.04},{"fecha":"2023-09-28","usd":188.21},{"fecha":"2023-10-05","usd":187.73},{"fecha":"2023-10-12","usd":187.64},{"fecha":"2023-10-19","usd":184.9},{"fecha":"2023-10-26","usd":183.47},{"fecha":"2023-11-02","usd":181.25},{"fecha":"2023-11-09","usd":180.62},{"fecha":"2023-11-16","usd":182.58},{"fecha":"2023-11-23","usd":181.73},{"fecha":"2023-11-30","usd":180.01},{"fecha":"2023-12-07","usd":181.05},{"fecha":"2023-12-14","usd":180.18},{"fecha":"2023-12-21","usd":177.62},{"fecha":"2023-12-28","usd":176.68},{"fecha":"2024-01-04","usd":177.75},{"fecha":"2024-01-11","usd":176.06},{"fecha":"2024-01-18","usd":178.22},{"fecha":"2024-01-25","usd":175.7},{"fecha":"2024-02-01","usd":178.18},{"fecha":"2024-02-08","usd":176.73},{"fecha":"2024-02-15","usd":176.89},{"fecha":"2024-02-22","usd":176.72},{"fecha":"2024-02-29","usd":173.17},{"fecha":"2024-03-07","usd":172.09},{"fecha":"2024-03-14","usd":170.83},{"fecha":"2024-03-21","usd":171.33},{"fecha":"2024-03-28","usd":168.94},{"fecha":"2024-04-04","usd":171.35},{"fecha":"2024-04-11","usd":169.01},{"fecha":"2024-04-18","usd":167.07},{"fecha":"2024-04-25","usd":165.23},{"fecha":"2024-05-02","usd":163.94},{"fecha":"2024-05-09","usd":162.62},{"fecha":"2024-05-16","usd":163.28},{"fecha":"2024-05-23","usd":162.43},{"fecha":"2024-05-30","usd":162.16},{"fecha":"2024-06-06","usd":160.25},{"fecha":"2024-06-13","usd":159.17},{"fecha":"2024-06-20","usd":159.94},{"fecha":"2024-06-27","usd":159.59},{"fecha":"2024-07-04","usd":159.65},{"fecha":"2024-07-11","usd":157.6},{"fecha":"2024-07-18","usd":156.04},{"fecha":"2024-07-25","usd":156.83},{"fecha":"2024-08-01","usd":155.81},{"fecha":"2024-08-08","usd":157.92},{"fecha":"2024-08-15","usd":157.28},{"fecha":"2024-08-22","usd":156.81},{"fecha":"2024-08-29","usd":155.99},{"fecha":"2024-09-05","usd":156.95},{"fecha":"2024-09-12","usd":156.44},{"fecha":"2024-09-19","usd":159.12},{"fecha":"2024-09-26","usd":159.27},{"fecha":"2024-10-03","usd":160.03},{"fecha":"2024-10-10","usd":162.02},{"fecha":"2024-10-17","usd":162.21},{"fecha":"2024-10-24","usd":165.65},{"fecha":"2024-10-31","usd":166.03},{"fecha":"2024-11-07","usd":167.25},{"fecha":"2024-11-14","usd":169.02},{"fecha":"2024-11-21","usd":168.11},{"fecha":"2024-11-28","usd":171.28},{"fecha":"2024-12-05","usd":168.36},{"fecha":"2024-12-12","usd":168.73},{"fecha":"2024-12-19","usd":172.46},{"fecha":"2024-12-26","usd":171.53},{"fecha":"2025-01-02","usd":172.95},{"fecha":"2025-01-09","usd":173.51},{"fecha":"2025-01-16","usd":173.68},{"fecha":"2025-01-23","usd":172.58},{"fecha":"2025-01-30","usd":172.39},{"fecha":"2025-02-06","usd":174.88},{"fecha":"2025-02-13","usd":173.94},{"fecha":"2025-02-20","usd":175.35},{"fecha":"2025-02-27","usd":176.87},{"fecha":"2025-03-06","usd":173.48},{"fecha":"2025-03-13","usd":176.3},{"fecha":"2025-03-20","usd":174.25},{"fecha":"2025-03-27","usd":174.75},{"fecha":"2025-04-03","usd":175.13},{"fecha":"2025-04-10","usd":174.81},{"fecha":"2025-04-17","usd":171.49},{"fecha":"2025-04-24","usd":172.98},{"fecha":"2025-05-01","usd":171.31},{"fecha":"2025-05-08","usd":171.5},{"fecha":"2025-05-15","usd":171.33},{"fecha":"2025-05-22","usd":168.57},{"fecha":"2025-05-29","usd":172.16},{"fecha":"2025-06-05","usd":169.1},{"fecha":"2025-06-12","usd":168.07},{"fecha":"2025-06-19","usd":168.59},{"fecha":"2025-06-26","usd":167.16},{"fecha":"2025-07-03","usd":167.4},{"fecha":"2025-07-10","usd":166.89},{"fecha":"2025-07-17","usd":169.34},{"fecha":"2025-07-24","usd":168.73},{"fecha":"2025-07-31","usd":166.88},{"fecha":"2025-08-07","usd":167.51},{"fecha":"2025-08-14","usd":165.15},{"fecha":"2025-08-21","usd":164.14},{"fecha":"2025-08-28","usd":163.92},{"fecha":"2025-09-04","usd":163.67},{"fecha":"2025-09-11","usd":166.09},{"fecha":"2025-09-18","usd":167.61},{"fecha":"2025-09-25","usd":166.31},{"fecha":"2025-10-02","usd":167.74},{"fecha":"2025-10-09","usd":169.24},{"fecha":"2025-10-16","usd":168.11},{"fecha":"2025-10-23","usd":170.35},{"fecha":"2025-10-30","usd":170.89},{"fecha":"2025-11-06","usd":169.88},{"fecha":"2025-11-13","usd":169.51},{"fecha":"2025-11-20","usd":172.77},{"fecha":"2025-11-27","usd":173.05},{"fecha":"2025-12-04","usd":171.04},{"fecha":"2025-12-11","usd":170.99},{"fecha":"2025-12-18","usd":171.92},{"fecha":"2025-12-25","usd":173.22},{"fecha":"2026-01-01","usd":172.92},{"fecha":"2026-01-08","usd":176.21},{"fecha":"2026-01-15","usd":176.24},{"fecha":"2026-01-22","usd":173.93},{"fecha":"2026-01-29","usd":177.58},{"fecha":"2026-02-05","usd":176.69},{"fecha":"2026-02-12","usd":175.18},{"fecha":"2026-02-19","usd":176.35},{"fecha":"2026-02-26","usd":176.16},{"fecha":"2026-03-05","usd":176.39},{"fecha":"2026-03-12","usd":175.31},{"fecha":"2026-03-19","usd":176.91},{"fecha":"2026-03-26","usd":173.9},{"fecha":"2026-04-02","usd":175.98},{"fecha":"2026-04-07","usd":176.2}],"trigo":[{"fecha":"2021-04-08","usd":227.85},{"fecha":"2021-04-15","usd":233.24},{"fecha":"2021-04-22","usd":234.54},{"fecha":"2021-04-29","usd":240.07},{"fecha":"2021-05-06","usd":242.47},{"fecha":"2021-05-13","usd":247.44},{"fecha":"2021-05-20","usd":249.4},{"fecha":"2021-05-27","usd":253.27},{"fecha":"2021-06-03","usd":256.81},{"fecha":"2021-06-10","usd":253.91},{"fecha":"2021-06-17","usd":255.17},{"fecha":"2021-06-24","usd":250.12},{"fecha":"2021-07-01","usd":253.09},{"fecha":"2021-07-08","usd":248.36},{"fecha":"2021-07-15","usd":249.27},{"fecha":"2021-07-22","usd":249.0},{"fecha":"2021-07-29","usd":247.22},{"fecha":"2021-08-05","usd":242.82},{"fecha":"2021-08-12","usd":242.35},{"fecha":"2021-08-19","usd":241.68},{"fecha":"2021-08-26","usd":240.56},{"fecha":"2021-09-02","usd":238.95},{"fecha":"2021-09-09","usd":242.8},{"fecha":"2021-09-16","usd":242.33},{"fecha":"2021-09-23","usd":243.46},{"fecha":"2021-09-30","usd":244.28},{"fecha":"2021-10-07","usd":244.05},{"fecha":"2021-10-14","usd":245.51},{"fecha":"2021-10-21","usd":246.61},{"fecha":"2021-10-28","usd":245.7},{"fecha":"2021-11-04","usd":244.11},{"fecha":"2021-11-11","usd":247.36},{"fecha":"2021-11-18","usd":250.74},{"fecha":"2021-11-25","usd":251.1},{"fecha":"2021-12-02","usd":249.89},{"fecha":"2021-12-09","usd":258.48},{"fecha":"2021-12-16","usd":268.91},{"fecha":"2021-12-23","usd":279.47},{"fecha":"2021-12-30","usd":291.83},{"fecha":"2022-01-06","usd":301.29},{"fecha":"2022-01-13","usd":304.68},{"fecha":"2022-01-20","usd":315.3},{"fecha":"2022-01-27","usd":329.54},{"fecha":"2022-02-03","usd":333.97},{"fecha":"2022-02-10","usd":348.04},{"fecha":"2022-02-17","usd":357.24},{"fecha":"2022-02-24","usd":363.93},{"fecha":"2022-03-03","usd":374.62},{"fecha":"2022-03-10","usd":368.8},{"fecha":"2022-03-17","usd":370.97},{"fecha":"2022-03-24","usd":374.69},{"fecha":"2022-03-31","usd":380.75},{"fecha":"2022-04-07","usd":374.76},{"fecha":"2022-04-14","usd":381.17},{"fecha":"2022-04-21","usd":378.86},{"fecha":"2022-04-28","usd":379.19},{"fecha":"2022-05-05","usd":388.11},{"fecha":"2022-05-12","usd":383.99},{"fecha":"2022-05-19","usd":388.04},{"fecha":"2022-05-26","usd":392.42},{"fecha":"2022-06-02","usd":388.65},{"fecha":"2022-06-09","usd":382.17},{"fecha":"2022-06-16","usd":379.32},{"fecha":"2022-06-23","usd":372.82},{"fecha":"2022-06-30","usd":362.98},{"fecha":"2022-07-07","usd":358.47},{"fecha":"2022-07-14","usd":349.45},{"fecha":"2022-07-21","usd":349.56},{"fecha":"2022-07-28","usd":344.12},{"fecha":"2022-08-04","usd":335.98},{"fecha":"2022-08-11","usd":327.48},{"fecha":"2022-08-18","usd":324.8},{"fecha":"2022-08-25","usd":312.91},{"fecha":"2022-09-01","usd":309.84},{"fecha":"2022-09-08","usd":304.45},{"fecha":"2022-09-15","usd":301.09},{"fecha":"2022-09-22","usd":303.5},{"fecha":"2022-09-29","usd":294.17},{"fecha":"2022-10-06","usd":292.09},{"fecha":"2022-10-13","usd":293.72},{"fecha":"2022-10-20","usd":286.07},{"fecha":"2022-10-27","usd":285.74},{"fecha":"2022-11-03","usd":280.16},{"fecha":"2022-11-10","usd":281.73},{"fecha":"2022-11-17","usd":273.77},{"fecha":"2022-11-24","usd":272.13},{"fecha":"2022-12-01","usd":270.59},{"fecha":"2022-12-08","usd":268.74},{"fecha":"2022-12-15","usd":269.76},{"fecha":"2022-12-22","usd":265.32},{"fecha":"2022-12-29","usd":263.58},{"fecha":"2023-01-05","usd":263.48},{"fecha":"2023-01-12","usd":262.16},{"fecha":"2023-01-19","usd":259.06},{"fecha":"2023-01-26","usd":260.5},{"fecha":"2023-02-02","usd":254.05},{"fecha":"2023-02-09","usd":255.29},{"fecha":"2023-02-16","usd":252.05},{"fecha":"2023-02-23","usd":250.79},{"fecha":"2023-03-02","usd":247.31},{"fecha":"2023-03-09","usd":245.47},{"fecha":"2023-03-16","usd":249.03},{"fecha":"2023-03-23","usd":247.8},{"fecha":"2023-03-30","usd":245.04},{"fecha":"2023-04-06","usd":241.23},{"fecha":"2023-04-13","usd":238.32},{"fecha":"2023-04-20","usd":240.23},{"fecha":"2023-04-27","usd":237.32},{"fecha":"2023-05-04","usd":236.03},{"fecha":"2023-05-11","usd":235.86},{"fecha":"2023-05-18","usd":231.97},{"fecha":"2023-05-25","usd":230.29},{"fecha":"2023-06-01","usd":228.36},{"fecha":"2023-06-08","usd":227.37},{"fecha":"2023-06-15","usd":227.06},{"fecha":"2023-06-22","usd":227.96},{"fecha":"2023-06-29","usd":223.66},{"fecha":"2023-07-06","usd":224.7},{"fecha":"2023-07-13","usd":225.63},{"fecha":"2023-07-20","usd":221.23},{"fecha":"2023-07-27","usd":221.34},{"fecha":"2023-08-03","usd":222.18},{"fecha":"2023-08-10","usd":217.27},{"fecha":"2023-08-17","usd":216.49},{"fecha":"2023-08-24","usd":215.54},{"fecha":"2023-08-31","usd":214.72},{"fecha":"2023-09-07","usd":213.55},{"fecha":"2023-09-14","usd":215.1},{"fecha":"2023-09-21","usd":213.44},{"fecha":"2023-09-28","usd":215.52},{"fecha":"2023-10-05","usd":213.87},{"fecha":"2023-10-12","usd":211.93},{"fecha":"2023-10-19","usd":214.72},{"fecha":"2023-10-26","usd":214.16},{"fecha":"2023-11-02","usd":213.18},{"fecha":"2023-11-09","usd":209.74},{"fecha":"2023-11-16","usd":211.14},{"fecha":"2023-11-23","usd":210.2},{"fecha":"2023-11-30","usd":211.91},{"fecha":"2023-12-07","usd":211.31},{"fecha":"2023-12-14","usd":209.41},{"fecha":"2023-12-21","usd":210.35},{"fecha":"2023-12-28","usd":207.19},{"fecha":"2024-01-04","usd":206.26},{"fecha":"2024-01-11","usd":207.0},{"fecha":"2024-01-18","usd":209.52},{"fecha":"2024-01-25","usd":206.95},{"fecha":"2024-02-01","usd":206.88},{"fecha":"2024-02-08","usd":208.61},{"fecha":"2024-02-15","usd":204.78},{"fecha":"2024-02-22","usd":206.51},{"fecha":"2024-02-29","usd":205.32},{"fecha":"2024-03-07","usd":202.2},{"fecha":"2024-03-14","usd":201.7},{"fecha":"2024-03-21","usd":203.97},{"fecha":"2024-03-28","usd":201.0},{"fecha":"2024-04-04","usd":202.48},{"fecha":"2024-04-11","usd":198.95},{"fecha":"2024-04-18","usd":201.23},{"fecha":"2024-04-25","usd":198.77},{"fecha":"2024-05-02","usd":199.04},{"fecha":"2024-05-09","usd":197.9},{"fecha":"2024-05-16","usd":195.49},{"fecha":"2024-05-23","usd":194.6},{"fecha":"2024-05-30","usd":196.67},{"fecha":"2024-06-06","usd":195.85},{"fecha":"2024-06-13","usd":191.74},{"fecha":"2024-06-20","usd":194.09},{"fecha":"2024-06-27","usd":192.9},{"fecha":"2024-07-04","usd":191.73},{"fecha":"2024-07-11","usd":190.79},{"fecha":"2024-07-18","usd":191.63},{"fecha":"2024-07-25","usd":189.32},{"fecha":"2024-08-01","usd":187.96},{"fecha":"2024-08-08","usd":187.09},{"fecha":"2024-08-15","usd":188.79},{"fecha":"2024-08-22","usd":183.86},{"fecha":"2024-08-29","usd":185.04},{"fecha":"2024-09-05","usd":183.29},{"fecha":"2024-09-12","usd":184.86},{"fecha":"2024-09-19","usd":185.66},{"fecha":"2024-09-26","usd":185.81},{"fecha":"2024-10-03","usd":188.73},{"fecha":"2024-10-10","usd":187.16},{"fecha":"2024-10-17","usd":187.99},{"fecha":"2024-10-24","usd":192.81},{"fecha":"2024-10-31","usd":192.62},{"fecha":"2024-11-07","usd":190.27},{"fecha":"2024-11-14","usd":192.67},{"fecha":"2024-11-21","usd":192.35},{"fecha":"2024-11-28","usd":193.0},{"fecha":"2024-12-05","usd":193.84},{"fecha":"2024-12-12","usd":196.73},{"fecha":"2024-12-19","usd":196.14},{"fecha":"2024-12-26","usd":195.79},{"fecha":"2025-01-02","usd":198.56},{"fecha":"2025-01-09","usd":196.83},{"fecha":"2025-01-16","usd":198.56},{"fecha":"2025-01-23","usd":198.04},{"fecha":"2025-01-30","usd":198.16},{"fecha":"2025-02-06","usd":197.59},{"fecha":"2025-02-13","usd":201.05},{"fecha":"2025-02-20","usd":197.58},{"fecha":"2025-02-27","usd":199.13},{"fecha":"2025-03-06","usd":200.89},{"fecha":"2025-03-13","usd":200.84},{"fecha":"2025-03-20","usd":200.51},{"fecha":"2025-03-27","usd":199.01},{"fecha":"2025-04-03","usd":200.88},{"fecha":"2025-04-10","usd":202.25},{"fecha":"2025-04-17","usd":201.8},{"fecha":"2025-04-24","usd":203.5},{"fecha":"2025-05-01","usd":202.65},{"fecha":"2025-05-08","usd":204.34},{"fecha":"2025-05-15","usd":205.04},{"fecha":"2025-05-22","usd":206.15},{"fecha":"2025-05-29","usd":202.46},{"fecha":"2025-06-05","usd":205.81},{"fecha":"2025-06-12","usd":203.04},{"fecha":"2025-06-19","usd":202.77},{"fecha":"2025-06-26","usd":200.73},{"fecha":"2025-07-03","usd":199.78},{"fecha":"2025-07-10","usd":199.5},{"fecha":"2025-07-17","usd":199.71},{"fecha":"2025-07-24","usd":198.89},{"fecha":"2025-07-31","usd":199.17},{"fecha":"2025-08-07","usd":198.48},{"fecha":"2025-08-14","usd":195.38},{"fecha":"2025-08-21","usd":194.31},{"fecha":"2025-08-28","usd":195.4},{"fecha":"2025-09-04","usd":195.8},{"fecha":"2025-09-11","usd":194.22},{"fecha":"2025-09-18","usd":195.66},{"fecha":"2025-09-25","usd":199.39},{"fecha":"2025-10-02","usd":200.21},{"fecha":"2025-10-09","usd":198.08},{"fecha":"2025-10-16","usd":200.7},{"fecha":"2025-10-23","usd":198.41},{"fecha":"2025-10-30","usd":202.23},{"fecha":"2025-11-06","usd":203.93},{"fecha":"2025-11-13","usd":203.71},{"fecha":"2025-11-20","usd":201.81},{"fecha":"2025-11-27","usd":204.23},{"fecha":"2025-12-04","usd":204.41},{"fecha":"2025-12-11","usd":206.84},{"fecha":"2025-12-18","usd":209.32},{"fecha":"2025-12-25","usd":205.94},{"fecha":"2026-01-01","usd":208.52},{"fecha":"2026-01-08","usd":206.79},{"fecha":"2026-01-15","usd":211.68},{"fecha":"2026-01-22","usd":209.0},{"fecha":"2026-01-29","usd":213.43},{"fecha":"2026-02-05","usd":213.99},{"fecha":"2026-02-12","usd":212.28},{"fecha":"2026-02-19","usd":214.55},{"fecha":"2026-02-26","usd":215.01},{"fecha":"2026-03-05","usd":214.25},{"fecha":"2026-03-12","usd":215.2},{"fecha":"2026-03-19","usd":212.78},{"fecha":"2026-03-26","usd":212.47},{"fecha":"2026-04-02","usd":211.78},{"fecha":"2026-04-07","usd":213.93}]};
 
 async function loadHistData(){
   // Si ya tenemos datos y son recientes (< 60 min), usar cache
@@ -510,20 +579,19 @@ function showChartEmpty(msg){
   if(txt&&msg) txt.innerHTML=msg;
 }
 
-function renderStats(s){
+function renderStats(s, modo){
   const el=document.getElementById('m-stats');
   if(!s.length){el.innerHTML='';return;}
+  const m=modo||activeMode;
   const vals=s.map(p=>p.val),cur=vals[vals.length-1],first=vals[0];
   const vT=calcVar(cur,first);
-  // Var 30d, 90d, 1y
   const now=Date.now();
   const p30=s.find(x=>x.ts>=now-30*864e5);
-  const p90=s.find(x=>x.ts>=now-90*864e5);
   const p365=s.find(x=>x.ts>=now-365*864e5);
-  const fmt=activeMode==='usd'?fmtUSD:fmtARS;
+  const fmt=m==='usd'?fmtUSD:fmtARS;
   el.innerHTML=[
-    {l:'Precio actual',v:fmt(cur),c:''},
-    {l:`Var. período`,v:vTxt(vT),c:vCls(vT)},
+    {l:'Precio actual',v:fmt(cur)+(m==='usd'?' USD/tn':' ARS/tn'),c:''},
+    {l:'Var. período',v:vTxt(vT),c:vCls(vT)},
     {l:'Var. 30 días',v:vTxt(calcVar(cur,p30?.val)),c:vCls(calcVar(cur,p30?.val))},
     {l:'Var. 1 año',v:vTxt(calcVar(cur,p365?.val)),c:vCls(calcVar(cur,p365?.val))},
     {l:'Mínimo',v:fmt(Math.min(...vals)),c:''},
@@ -531,7 +599,7 @@ function renderStats(s){
   ].map(x=>`<div class="stat-box"><div class="stat-lbl">${x.l}</div><div class="stat-val ${x.c}">${x.v}</div></div>`).join('');
 }
 
-function renderChart(s){
+function renderChart(s, modo){
   document.getElementById('m-loading').style.display='none';
   document.getElementById('m-empty').style.display='none';
   const cv=document.getElementById('m-chart');
@@ -562,32 +630,47 @@ function renderChart(s){
           backgroundColor:'#141a1e',borderColor:'#2a3f4a',borderWidth:1,
           titleColor:'#fff',bodyColor:'#fff',
           titleFont:{family:'DM Mono',size:10},bodyFont:{family:'DM Mono',size:12},
-          callbacks:{label:ctx=>{const v=ctx.parsed.y;return activeMode==='usd'?`  USD ${fmtUSD(v)}/tn`:`  ARS ${fmtARS(v)}/tn`;}}
+          callbacks:{label:ctx=>{const v=ctx.parsed.y;return (modo||activeMode)==='usd'?`  USD ${fmtUSD(v)}/tn`:`  ARS ${fmtARS(v)}/tn`;}}
         }
       },
       scales:{
         x:{ticks:{color:'#fff',font:{family:'DM Mono',size:8},maxTicksLimit:10,maxRotation:0},grid:{color:'rgba(255,255,255,.05)'},border:{color:'#2a3f4a'}},
-        y:{ticks:{color:'#fff',font:{family:'DM Mono',size:9},callback:v=>activeMode==='usd'?`USD ${fmtUSD(v)}`:`${Math.round(v/1000)}k`},grid:{color:'rgba(255,255,255,.05)'},border:{color:'#2a3f4a'}}
+        y:{ticks:{color:'#fff',font:{family:'DM Mono',size:9},callback:v=>(modo||activeMode)==='usd'?`USD ${fmtUSD(v)}`:`${Math.round(v/1000)}k`},grid:{color:'rgba(255,255,255,.05)'},border:{color:'#2a3f4a'}}
       }
     }
   });
 }
 
-function renderTable(s){
+function renderTable(arsData, cbotData){
   const rows=document.getElementById('m-rows');
-  const rev=[...s].reverse().slice(0,100);
-  rows.innerHTML=rev.map((p,i)=>{
-    const prev=rev[i+1];
-    const vd=prev?calcVar(p.val,prev.val):null;
-    const arsStr=fmtARS(p.ars);
-    const usdStr=dolarSpot?fmtUSD(p.ars/dolarSpot):'—';
-    return `<div class="hist-row">
-      <div class="hval">${p.fecha}</div>
-      <div class="hval r">${arsStr}</div>
-      <div class="hval r">${usdStr}</div>
-      <div class="hbadge ${vCls(vd)}">${vTxt(vd)}</div>
-    </div>`;
-  }).join('');
+  if(cbotData){
+    // Modo CBOT USD
+    const rev=[...cbotData].reverse().slice(0,100);
+    rows.innerHTML=rev.map((p,i)=>{
+      const prev=rev[i+1];
+      const vd=prev?calcVar(p.usd,prev.usd):null;
+      return `<div class="hist-row">
+        <div class="hval">${p.fecha}</div>
+        <div class="hval r">—</div>
+        <div class="hval r">${fmtUSD(p.usd)}</div>
+        <div class="hbadge ${vCls(vd)}">${vTxt(vd)}</div>
+      </div>`;
+    }).join('');
+  } else if(arsData){
+    // Modo ARS
+    const rev=[...arsData].reverse().slice(0,100);
+    rows.innerHTML=rev.map((p,i)=>{
+      const prev=rev[i+1];
+      const vd=prev?calcVar(p.ars,prev.ars):null;
+      const usdStr=dolarSpot?fmtUSD(p.ars/dolarSpot):'—';
+      return `<div class="hist-row">
+        <div class="hval">${p.fecha}</div>
+        <div class="hval r">${fmtARS(p.ars)}</div>
+        <div class="hval r">${usdStr}</div>
+        <div class="hbadge ${vCls(vd)}">${vTxt(vd)}</div>
+      </div>`;
+    }).join('');
+  }
 }
 
 // ═══════════════════════════
@@ -649,18 +732,71 @@ async function loadVariaciones(){
 }
 
 // ═══════════════════════════
-// DÓLAR
+// DÓLAR — desde Grassi get_dolar/ (misma fuente)
 // ═══════════════════════════
+function setTC(tipo, btn){
+  tcActivo = tipo;
+  document.querySelectorAll('.tc-btn').forEach(b=>b.classList.toggle('active', b.dataset.tc===tipo));
+  // Actualizar dolarSpot con el TC seleccionado
+  const tc = tcData[tipo];
+  if(tc){
+    dolarSpot = tc;
+    updateUSDCards();
+    const el = document.getElementById('tc-display');
+    if(el) el.textContent = '$ ' + Math.round(tc).toLocaleString('es-AR');
+  }
+}
+
+function updateUSDCards(){
+  // Recalcular todos los precios USD con el nuevo TC
+  CROPS.forEach(c=>{
+    const arsVal = prevArs[c.k];
+    if(!arsVal || !dolarSpot) return;
+    const valU = arsVal / dolarSpot;
+    const pu = document.getElementById('pu-'+c.k);
+    const fu = document.getElementById('fu-'+c.k);
+    if(pu){ pu._prev=valU; pu.className='cprice'; pu.innerHTML=`${fmtUSD(valU)} <span class="cur">USD/tn</span>`;}
+    if(fu) fu.textContent = `= ${fmtARS(arsVal)} ARS`;
+  });
+}
+
 async function fetchDolar(){
   setSt('df','lf','loading','Actualizando dólar…');
   try{
-    const r=await fetch('https://economia.awesomeapi.com.br/json/last/USD-ARS');
-    const d=await r.json();
-    const p=parseFloat(d['USDARS']?.bid);
-    if(!p)throw new Error();
-    dolarSpot=p;
-    setSt('df','lf','live',`USD/ARS ${Math.round(p).toLocaleString('es-AR')}`);
-  }catch{setSt('df','lf','error','FX no disponible');}
+    // Usar Grassi get_dolar/ — misma fuente, múltiples TCs
+    const r = await fetch('https://www.ggsa.com.ar/get_dolar/');
+    const d = await r.json();
+    const hoy = d.dolarayer || d.dolar;
+    if(!hoy) throw new Error('Sin datos');
+    
+    const oficial = parseFloat(hoy.nacion?.venta);
+    const mae     = parseFloat(hoy.mae?.precio);
+    const libre   = parseFloat(hoy.libre?.venta);
+    
+    if(oficial > 0) tcData.oficial = oficial;
+    if(mae > 0)     tcData.mae     = mae;
+    if(libre > 0)   tcData.libre   = libre;
+    
+    // Usar el TC activo
+    const tc = tcData[tcActivo] || oficial || mae;
+    if(!tc) throw new Error('Sin precio');
+    dolarSpot = tc;
+    
+    // Actualizar display
+    const el = document.getElementById('tc-display');
+    if(el) el.textContent = '$ ' + Math.round(tc).toLocaleString('es-AR');
+    
+    setSt('df','lf','live',`TC Oficial $${Math.round(oficial||tc).toLocaleString('es-AR')}`);
+  }catch(e){
+    // Fallback a AwesomeAPI
+    try{
+      const r2=await fetch('https://economia.awesomeapi.com.br/json/last/USD-ARS');
+      const d2=await r2.json();
+      const p=parseFloat(d2['USDARS']?.bid);
+      if(p){ dolarSpot=p; tcData.oficial=p; tcData.mae=p; tcData.libre=p; }
+      setSt('df','lf','live',`USD/ARS ${Math.round(p).toLocaleString('es-AR')}`);
+    }catch{ setSt('df','lf','error','FX no disponible'); }
+  }
 }
 
 // ═══════════════════════════
@@ -714,6 +850,113 @@ async function fetchGrassi(){
     setSt('dg','lg','error','Error: '+e.message);
     CROPS.forEach(c=>{['pa-','pu-'].forEach(pre=>{const el=document.getElementById(pre+c.k);if(el){el.className='cprice nodata';el.textContent='Error';}});});
   }
+}
+
+// ═══════════════════════════
+// BCR COTIZACIONES INTERNACIONALES
+// Scrapea bcr.com.ar/cotizaciones-internacionales-1
+// Devuelve futuros CBOT: Soja, Maíz, Trigo en USD/tn
+// Sin CORS (verificado: 200 OK desde GitHub Pages)
+// ═══════════════════════════
+async function fetchBCRInternacional(){
+  setSt('dm','lm','loading','Cargando BCR…');
+  try{
+    const r = await fetch('https://www.bcr.com.ar/es/mercados/mercado-de-granos/cotizaciones/cotizaciones-internacionales-1');
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const html = await r.text();
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+
+    // Extraer tabla principal
+    const table = doc.querySelector('table');
+    if(!table) throw new Error('Sin tabla');
+
+    const rows = Array.from(table.querySelectorAll('tr'))
+      .map(r => Array.from(r.querySelectorAll('td,th')).map(c => c.textContent.trim()));
+
+    // Fila 0: título con fecha  "... 09/04/2026"
+    const fechaStr = rows[0]?.find(c => c.match(/\d{2}\/\d{2}\/\d{4}/)) || '';
+    // Fila 1: encabezados  [-, Trigo Chi/1, Trigo Chi/2, Maíz Chi/3, Soja Chi/4, ...]
+    // Columnas: pos(0), trigo_precio(1), trigo_var(2), maiz_precio(3?... no)
+    // Estructura real: pos | TrigoKansas_precio | TrigoKansas_var | TrigoChicago_precio | TrigoChicago_var | Maiz_precio | Maiz_var | Soja_precio | Soja_var | ...
+    // Basado en datos reales: [pos, Trigo/1 precio, Trigo/1 var, Trigo/2 precio, Trigo/2 var, Maiz precio, Maiz var, Soja precio, Soja var, Aceite precio, Aceite var, Harina precio, Harina var]
+    // Columna índices (0-based): pos=0, soja_precio=7, soja_var=8, maiz_precio=5, maiz_var=6, trigo_precio=3, trigo_var=4
+
+    const parseNum = s => s ? parseFloat(s.replace('.','').replace(',','.')) : null;
+
+    const futuros = [];
+    const CULTIVOS = [
+      {nombre:'Soja Chicago',   icon:'🌱', pi:7, vi:8},
+      {nombre:'Maíz Chicago',   icon:'🌽', pi:5, vi:6},
+      {nombre:'Trigo Chicago',  icon:'🌾', pi:3, vi:4},
+      {nombre:'Trigo Kansas',   icon:'🌾', pi:1, vi:2},
+    ];
+
+    // Filas de datos (desde fila 2 en adelante)
+    rows.slice(2).forEach(row => {
+      const pos = row[0];
+      if(!pos || pos==='-') return;
+      CULTIVOS.forEach(c => {
+        const precio = parseNum(row[c.pi]);
+        const variacion = parseNum(row[c.vi]);
+        if(precio && precio > 0){
+          futuros.push({
+            cultivo: c.nombre,
+            icon: c.icon,
+            posicion: pos,
+            ajuste_usd: precio,
+            variacion_usd: variacion,
+            variacion_pct: variacion && precio ? (variacion/(precio-variacion))*100 : null,
+          });
+        }
+      });
+    });
+
+    // Renderizar agrupado por cultivo
+    renderFuturosBCR(futuros, fechaStr);
+
+    // También actualizar dólar ROFEX desde Grassi
+    try{
+      const rf = await fetch('https://www.ggsa.com.ar/get_futuros/');
+      const df = await rf.json();
+      const rofexVals = (df?.futuros?.[0]?.rofex?.dolar?.valores||[]).filter(v=>v.precio&&parseFloat(v.precio)>0);
+      document.getElementById('rgrid').innerHTML = rofexVals.slice(0,12).map(v=>`
+        <div class="rcard"><div class="rca"></div>
+        <div class="rpos">${fmtPos(v.pos)}</div>
+        <div class="rprice">${parseFloat(v.precio).toLocaleString('es-AR',{maximumFractionDigits:1})}</div>
+        <div class="rsub">ARS/USD</div></div>`).join('');
+      if(!dolarSpot && rofexVals.length){
+        dolarSpot = parseFloat(rofexVals[0].precio);
+      }
+    }catch(e){}
+
+    setSt('dm','lm','live',`BCR · ${fechaStr}`);
+  }catch(e){
+    setSt('dm','lm','error','Error BCR: '+e.message);
+    document.getElementById('fbody').innerHTML=`<div class="fut-loading" style="color:var(--red)">Error: ${e.message}</div>`;
+  }
+}
+
+function renderFuturosBCR(futuros, fecha){
+  const ORDER = ['Soja Chicago','Maíz Chicago','Trigo Chicago','Trigo Kansas'];
+  let last = '';
+  const sorted = [];
+  ORDER.forEach(n => { futuros.filter(f=>f.cultivo===n).forEach(f=>sorted.push(f)); });
+
+  document.getElementById('fbody').innerHTML = sorted.map(f => {
+    const isNew = f.cultivo !== last; last = f.cultivo;
+    const pct = f.variacion_pct;
+    return `<div class="frow${isNew?' gsep':''}">
+      <div class="fname">${isNew?`<span>${f.icon}</span><span>${f.cultivo}</span>`:''}</div>
+      <div class="fpos">${f.posicion}</div>
+      <div class="fpr">${fmtUSD(f.ajuste_usd)}</div>
+      <div class="fbadge ${vCls(pct)}">${vTxt(pct)}</div>
+      <div class="fvol">${f.variacion_usd!=null?(f.variacion_usd>=0?'+':'')+f.variacion_usd.toFixed(2):'—'}</div>
+      <div class="fvol">—</div>
+      <div class="fvol">—</div>
+    </div>`;
+  }).join('');
+  document.getElementById('fut-note').textContent = `Futuros CBOT · BCR Cotizaciones Internacionales · ${fecha}`;
 }
 
 // ═══════════════════════════
@@ -792,13 +1035,76 @@ function renderFuturosDirect(rows){
   document.getElementById('fut-note').textContent='Futuros via Grassi/MATBA · Último cierre disponible';
 }
 
+
+// ═══════════════════════════
+// BCR — FUTUROS CBOT (cotizaciones-internacionales-1)
+// Scraping HTML directo, sin CORS issues
+// Estructura: pos | Trigo/precio,var | Trigo2/precio,var | Maiz/precio,var | Soja/precio,var | AcSoja/precio,var | HarSoja/precio,var
+// ═══════════════════════════
+async function fetchBCR(){
+  try{
+    const r = await fetch('https://www.bcr.com.ar/es/mercados/mercado-de-granos/cotizaciones/cotizaciones-internacionales-1');
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const html = await r.text();
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+
+    // Obtener fecha
+    const fechaRow = doc.querySelector('table tr');
+    const fechaTxt = fechaRow ? fechaRow.textContent.match(/\d{2}\/\d{2}\/\d{4}/) : null;
+    const fecha = fechaTxt ? fechaTxt[0] : '—';
+
+    // Leer filas de datos (saltear las 2 primeras: título y headers)
+    const rows = Array.from(doc.querySelectorAll('table tr')).slice(2);
+
+    // Columnas del HTML: pos | Trigo1-precio,var | Trigo2-precio,var | Maiz-precio,var | Soja-precio,var | AcSoja-precio,var | HarSoja-precio,var
+    // Índices: 0=pos, 1-2=Trigo Ch1, 3-4=Trigo Ch2, 5-6=Maiz, 7-8=Soja, 9-10=AcSoja, 11-12=HarSoja
+    const tbody = document.getElementById('bcr-body');
+    if(!tbody) return;
+
+    const parsed = rows.map(row => {
+      const cells = Array.from(row.querySelectorAll('td,th')).map(c => c.textContent.trim());
+      if(!cells[0] || cells[0]==='-') return null;
+      const p = i => cells[i] || '';
+      const num = s => s ? parseFloat(s.replace(',','.')) : null;
+      const varCls = v => v===null?'empty':v>0?'var-pos':v<0?'var-neg':'var-neu';
+      const fmt = v => v===null?'<span class="empty">—</span>':v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+      const fmtV = v => v===null?'<span class="empty">—</span>':`<span class="${varCls(v)}">${v>0?'+':''}${v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</span>`;
+
+      // Soja: col 7,8 | Maiz: col 5,6 | Trigo Chicago: col 1,2 | AcSoja: col 9,10 | HarSoja: col 11,12
+      const soja  = num(p(7)),  sojaV  = num(p(8));
+      const maiz  = num(p(5)),  maizV  = num(p(6));
+      const trigo = num(p(1)),  trigoV = num(p(2));
+      const acSoj = num(p(9)),  acSojV = num(p(10));
+      const harSoj= num(p(11)), harSojV= num(p(12));
+
+      return `<tr>
+        <td>${p(0)}</td>
+        <td>${fmt(soja)}</td><td>${fmtV(sojaV)}</td>
+        <td>${fmt(maiz)}</td><td>${fmtV(maizV)}</td>
+        <td>${fmt(trigo)}</td><td>${fmtV(trigoV)}</td>
+        <td>${fmt(acSoj)}</td><td>${fmtV(acSojV)}</td>
+        <td>${fmt(harSoj)}</td><td>${fmtV(harSojV)}</td>
+      </tr>`;
+    }).filter(Boolean);
+
+    tbody.innerHTML = parsed.join('') || '<tr><td colspan="11" class="bcr-loading">Sin datos</td></tr>';
+    const srcEl = document.getElementById('bcr-src');
+    if(srcEl) srcEl.textContent = `Bolsa de Comercio de Rosario · Cierre CBOT · ${fecha} · USD/tn`;
+
+  }catch(e){
+    const tbody = document.getElementById('bcr-body');
+    if(tbody) tbody.innerHTML = `<tr><td colspan="11" class="bcr-loading" style="color:var(--red)">Error: ${e.message}</td></tr>`;
+  }
+}
+
 // ═══════════════════════════
 // FETCH ALL
 // ═══════════════════════════
 async function fetchAll(){
   const btn=document.getElementById('btnr');
   btn.disabled=true;btn.textContent='Cargando…';
-  await Promise.all([fetchDolar(),fetchGrassi(),fetchMatba()]);
+  await Promise.all([fetchDolar(),fetchGrassi(),fetchBCR()]);
   // Cargar variaciones en background (no bloquea la UI)
   loadVariaciones();
   const now=new Date().toLocaleTimeString('es-AR',{timeZone:'America/Argentina/Buenos_Aires',hour12:false});
