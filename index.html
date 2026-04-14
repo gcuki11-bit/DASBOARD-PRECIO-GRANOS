@@ -314,18 +314,15 @@ footer{padding:14px 36px 24px;border-top:1px solid var(--b);display:flex;justify
   </div>
   <div class="panel" id="panel-fut">
     <!-- BCR: Cotizaciones Internacionales CBOT -->
-    <div class="sh"><div class="sh-t fut">Futuros CBOT · USD/tn</div><div class="sh-line"></div><div class="sh-src">BCR · bcr.com.ar</div></div>
+    <div class="sh"><div class="sh-t fut">Futuros Agropecuarios · USD/tn</div><div class="sh-line"></div><div class="sh-src">MATBA-ROFEX · Contratos Rosario</div></div>
     <div class="bcr-wrap">
       <table class="bcr-table" id="bcr-table">
         <thead><tr>
+          <th style="text-align:left">Cultivo</th>
           <th>Posición</th>
-          <th>Soja</th><th>Var.</th>
-          <th>Maíz</th><th>Var.</th>
-          <th>Trigo Ch.</th><th>Var.</th>
-          <th>Ac. Soja</th><th>Var.</th>
-          <th>Har. Soja</th><th>Var.</th>
+          <th>USD/tn</th>
         </tr></thead>
-        <tbody id="bcr-body"><tr><td colspan="11" class="bcr-loading">Cargando BCR…</td></tr></tbody>
+        <tbody id="bcr-body"><tr><td colspan="3" class="bcr-loading">Cargando Matba-Rofex…</td></tr></tbody>
       </table>
     </div>
     <div class="bcr-src" id="bcr-src"></div>
@@ -1037,64 +1034,85 @@ function renderFuturosDirect(rows){
 
 
 // ═══════════════════════════
-// BCR — FUTUROS CBOT (cotizaciones-internacionales-1)
-// Scraping HTML directo, sin CORS issues
-// Estructura: pos | Trigo/precio,var | Trigo2/precio,var | Maiz/precio,var | Soja/precio,var | AcSoja/precio,var | HarSoja/precio,var
+// MATBA-ROFEX — FUTUROS AGROPECUARIOS en USD
+// Scraping DOM de matbarofex.primary.ventures/fyo/futurosagropecuarios
+// Parser de texto plano — contratos SOJ.ROS, MAI.ROS, TRI.ROS, GIR.ROS, SOR.ROS
 // ═══════════════════════════
 async function fetchBCR(){
+  // Alias para compatibilidad con fetchAll
+  return fetchMatbaRofex();
+}
+
+async function fetchMatbaRofex(){
   try{
-    const r = await fetch('https://www.bcr.com.ar/es/mercados/mercado-de-granos/cotizaciones/cotizaciones-internacionales-1');
+    const r = await fetch('https://matbarofex.primary.ventures/fyo/futurosagropecuarios');
     if(!r.ok) throw new Error('HTTP '+r.status);
-    const html = await r.text();
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
+    const htmlTxt = await r.text();
+    const doc = new DOMParser().parseFromString(htmlTxt, 'text/html');
+    const txt = doc.body.innerText;
+    const lines = txt.split('\n');
 
-    // Obtener fecha
-    const fechaRow = doc.querySelector('table tr');
-    const fechaTxt = fechaRow ? fechaRow.textContent.match(/\d{2}\/\d{2}\/\d{4}/) : null;
-    const fecha = fechaTxt ? fechaTxt[0] : '—';
+    // Parser: detectar cultivo por prefijo del símbolo (robusto, sin depender de secciones de texto)
+    const symCropMap = {'SOJ.ROS':'soja','MAI.ROS':'maiz','TRI.ROS':'trigo','GIR.ROS':'girasol','SOR.ROS':'sorgo'};
+    const contracts = [];
 
-    // Leer filas de datos (saltear las 2 primeras: título y headers)
-    const rows = Array.from(doc.querySelectorAll('table tr')).slice(2);
+    for(let i=0; i<lines.length; i++){
+      const l = lines[i].trim();
+      // Solo contratos principales: SOJ.ROS/MAY26, MAI.ROS/JUL26, etc. (sin M final)
+      const symMatch = l.match(/^(SOJ\.ROS|MAI\.ROS|TRI\.ROS|GIR\.ROS|SOR\.ROS)\/([A-Z]{3}\d{2})$/);
+      if(!symMatch) continue;
+      const crop = symCropMap[symMatch[1]];
+      const pos  = symMatch[2];
+      for(let j=i+1; j<Math.min(i+18,lines.length); j++){
+        const num = lines[j].trim().match(/^[\d.]+,\d+$/);
+        if(num){
+          const price = parseFloat(num[0].replace(/\./g,'').replace(',','.'));
+          if(price > 50 && price < 5000){
+            contracts.push({crop, sym:l, pos, ajuste:price});
+            break;
+          }
+        }
+      }
+    }
 
-    // Columnas del HTML: pos | Trigo1-precio,var | Trigo2-precio,var | Maiz-precio,var | Soja-precio,var | AcSoja-precio,var | HarSoja-precio,var
-    // Índices: 0=pos, 1-2=Trigo Ch1, 3-4=Trigo Ch2, 5-6=Maiz, 7-8=Soja, 9-10=AcSoja, 11-12=HarSoja
+    // Guardar precios spot para usarlos en el histórico USD
+    window._matbaFuturos = contracts;
+
+    // Agrupar por cultivo para mostrar en tabla
+    const byCrop = {};
+    contracts.forEach(c => {
+      if(!byCrop[c.crop]) byCrop[c.crop] = [];
+      byCrop[c.crop].push(c);
+    });
+
+    // Renderizar tabla agrupada por cultivo
     const tbody = document.getElementById('bcr-body');
     if(!tbody) return;
 
-    const parsed = rows.map(row => {
-      const cells = Array.from(row.querySelectorAll('td,th')).map(c => c.textContent.trim());
-      if(!cells[0] || cells[0]==='-') return null;
-      const p = i => cells[i] || '';
-      const num = s => s ? parseFloat(s.replace(',','.')) : null;
-      const varCls = v => v===null?'empty':v>0?'var-pos':v<0?'var-neg':'var-neu';
-      const fmt = v => v===null?'<span class="empty">—</span>':v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
-      const fmtV = v => v===null?'<span class="empty">—</span>':`<span class="${varCls(v)}">${v>0?'+':''}${v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</span>`;
+    const fmtP = v => v.toLocaleString('en-US',{minimumFractionDigits:1,maximumFractionDigits:1});
+    const cropLabel = {soja:'🌱 Soja',maiz:'🌽 Maíz',trigo:'🌾 Trigo',girasol:'🌻 Girasol',sorgo:'🌿 Sorgo'};
 
-      // Soja: col 7,8 | Maiz: col 5,6 | Trigo Chicago: col 1,2 | AcSoja: col 9,10 | HarSoja: col 11,12
-      const soja  = num(p(7)),  sojaV  = num(p(8));
-      const maiz  = num(p(5)),  maizV  = num(p(6));
-      const trigo = num(p(1)),  trigoV = num(p(2));
-      const acSoj = num(p(9)),  acSojV = num(p(10));
-      const harSoj= num(p(11)), harSojV= num(p(12));
+    let rows = '';
+    ['soja','maiz','trigo','girasol','sorgo'].forEach(crop => {
+      const cs = byCrop[crop]||[];
+      if(!cs.length) return;
+      cs.forEach((c,i) => {
+        rows += `<tr>
+          <td style="color:var(--amber)">${i===0?cropLabel[crop]:''}</td>
+          <td>${c.pos}</td>
+          <td style="color:#fff;font-weight:500">${fmtP(c.ajuste)}</td>
+        </tr>`;
+      });
+    });
 
-      return `<tr>
-        <td>${p(0)}</td>
-        <td>${fmt(soja)}</td><td>${fmtV(sojaV)}</td>
-        <td>${fmt(maiz)}</td><td>${fmtV(maizV)}</td>
-        <td>${fmt(trigo)}</td><td>${fmtV(trigoV)}</td>
-        <td>${fmt(acSoj)}</td><td>${fmtV(acSojV)}</td>
-        <td>${fmt(harSoj)}</td><td>${fmtV(harSojV)}</td>
-      </tr>`;
-    }).filter(Boolean);
-
-    tbody.innerHTML = parsed.join('') || '<tr><td colspan="11" class="bcr-loading">Sin datos</td></tr>';
+    tbody.innerHTML = rows || '<tr><td colspan="3" class="bcr-loading">Sin datos</td></tr>';
     const srcEl = document.getElementById('bcr-src');
-    if(srcEl) srcEl.textContent = `Bolsa de Comercio de Rosario · Cierre CBOT · ${fecha} · USD/tn`;
+    const now = new Date().toLocaleTimeString('es-AR',{timeZone:'America/Argentina/Buenos_Aires',hour12:false});
+    if(srcEl) srcEl.textContent = `Matba-Rofex · Futuros agropecuarios Rosario · USD/tn · ${now}`;
 
   }catch(e){
     const tbody = document.getElementById('bcr-body');
-    if(tbody) tbody.innerHTML = `<tr><td colspan="11" class="bcr-loading" style="color:var(--red)">Error: ${e.message}</td></tr>`;
+    if(tbody) tbody.innerHTML = `<tr><td colspan="3" class="bcr-loading" style="color:var(--red)">Error cargando Matba-Rofex: ${e.message}</td></tr>`;
   }
 }
 
